@@ -17,7 +17,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 .closed-book{width:190px;height:265px;cursor:pointer;filter:drop-shadow(0 20px 50px rgba(120,0,0,.55)) drop-shadow(0 4px 16px rgba(0,0,0,.9));transition:transform .45s ease,filter .45s ease}
 .closed-book:hover{transform:scale(1.05) rotateY(-7deg) rotateX(2deg);filter:drop-shadow(0 30px 70px rgba(160,0,0,.65)) drop-shadow(0 4px 16px rgba(0,0,0,.9))}
-.cover-face{width:100%;height:100%;background:linear-gradient(160deg,#07071a 0%,#0d0d22 55%,#07071a 100%);border-radius:2px 7px 7px 2px;border-left:9px solid #020208;border-right:1px solid #1c1c35;[...FULL CSS FROM ORIGINAL...]
+.cover-face{width:100%;height:100%;background:linear-gradient(160deg,#07071a 0%,#0d0d22 55%,#07071a 100%);border-radius:2px 7px 7px 2px;border-left:9px solid #020208;border-right:1px solid #1c1c35;[..[...]
 </style>
 </head>
 <body>
@@ -35,10 +35,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
       <button class="tab"    id="tb-gh" onclick="switchTab('gh')">GITHUB</button>
     </div>
 
-    <!-- TAB: GITHUB (MODIFIÉ AVEC SYNC AUTO) -->
+    <!-- TAB: GITHUB (SYNC MULTI-APPAREILS EN TEMPS RÉEL) -->
     <div id="tab-gh" style="display:none">
       <div class="gh-note">
-        ℹ️ <strong>Synchronisation GitHub</strong> — Permet à tous les visiteurs de voir vos modifications.<br>
+        ℹ️ <strong>Synchronisation GitHub Multi-Appareils</strong> — Les modifications se propagent automatiquement à TOUS les visiteurs en temps réel.<br>
         1. Créez un repo GitHub (ex: <em>bloodlines-bingo</em>) avec un fichier <code>bingo-data.json</code> vide <code>{}</code>.<br>
         2. Créez un token dans <em>Settings → Developer → Personal Access Tokens → Fine-grained</em> avec permission <em>Contents: Read & Write</em>.<br>
         3. Renseignez les champs ci-dessous. Le token reste dans VOTRE navigateur uniquement.
@@ -55,10 +55,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
       <input class="ap-in" id="gh-token" type="password" placeholder="github_pat_...">
       
       <div style="margin-top:14px;padding:12px;background:rgba(200,150,12,.08);border:1px solid rgba(200,150,12,.2);border-radius:2px">
-        <label class="ap-lbl">🔄 SYNC AUTOMATIQUE</label>
+        <label class="ap-lbl">🔄 SYNC AUTOMATIQUE TEMPS RÉEL</label>
         <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
           <input type="checkbox" id="gh-auto-sync" style="accent-color:#c8960c;cursor:pointer;width:18px;height:18px">
-          <label for="gh-auto-sync" style="cursor:pointer;font-family:'Cinzel',serif;font-size:.7rem;color:rgba(200,150,12,.8);margin:0">Activé (pousse toutes les modifs + importe toutes les 30s)</label>
+          <label for="gh-auto-sync" style="cursor:pointer;font-family:'Cinzel',serif;font-size:.7rem;color:rgba(200,150,12,.8);margin:0">Activé (sync tous les 3s sur TOUS les appareils)</label>
         </div>
       </div>
       
@@ -76,10 +76,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 
 <script>
 // ══════════════════════════════════════════════════════════════
-//  AUTO-SYNC GITHUB AUTOMATIQUE
+//  SYNC AUTO MULTI-APPAREILS EN TEMPS RÉEL (3 SECONDES)
 // ══════════════════════════════════════════════════════════════
 let autoSyncInterval = null;
 let lastDataHash = '';
+let lastRemoteHash = '';
 
 function getDataHash() {
   return JSON.stringify(data).substring(0, 100);
@@ -91,22 +92,22 @@ function startAutoSync() {
   
   if (autoSyncInterval) clearInterval(autoSyncInterval);
   
-  // Pousse immédiatement
-  ghPush().catch(e => console.warn('Auto-sync push failed:', e));
+  // ✅ POUSSE IMMÉDIATE au démarrage
+  ghPush().catch(e => console.warn('Auto-sync initial push failed:', e));
   lastDataHash = getDataHash();
   
+  // ✅ PULL/PUSH toutes les 3 secondes pour détecter les changements distants
   autoSyncInterval = setInterval(async () => {
-    const currentHash = getDataHash();
+    // Importer depuis GitHub (détecte si d'autres appareils ont modifié)
+    await ghPull().catch(e => console.warn('Auto-sync pull failed:', e));
     
-    // Si les données ont changé, pousser
+    // Pousser si les données locales ont changé
+    const currentHash = getDataHash();
     if (currentHash !== lastDataHash) {
       lastDataHash = currentHash;
       await ghPush().catch(e => console.warn('Auto-sync push failed:', e));
     }
-    
-    // Toujours importer (30s)
-    await ghPull().catch(e => console.warn('Auto-sync pull failed:', e));
-  }, 30000);
+  }, 3000); // ⚡ Réduit de 30s à 3s pour sync temps réel
 }
 
 function stopAutoSync() {
@@ -124,14 +125,14 @@ function initAutoSyncCheckbox() {
   // Charger la préférence sauvegardée
   const wasEnabled = localStorage.getItem('gh-auto-sync-enabled') === 'true';
   checkbox.checked = wasEnabled;
-  if (wasEnabled) startAutoSync();
+  if (wasEnabled && ghCfg.token && ghCfg.repo) startAutoSync();
   
   // Écouter les changements
   checkbox.addEventListener('change', (e) => {
     localStorage.setItem('gh-auto-sync-enabled', e.target.checked ? 'true' : 'false');
     if (e.target.checked) {
       startAutoSync();
-      toast('🟢 Sync auto activée');
+      toast('🟢 Sync auto activée (3s)');
     } else {
       stopAutoSync();
       toast('🔴 Sync auto désactivée');
@@ -146,8 +147,8 @@ window.saveData = function() {
   
   // Si auto-sync est activé, pousser immédiatement
   if (document.getElementById('gh-auto-sync')?.checked) {
-    ghPush().catch(e => console.warn('Auto-sync push on save failed:', e));
     lastDataHash = getDataHash();
+    ghPush().catch(e => console.warn('Auto-sync push on save failed:', e));
   }
 };
 
@@ -187,17 +188,17 @@ function rankInfo(n){return RANKS.find(r=>r.n===+n)||RANKS[0]}
 const DEFAULT = {
   book:{chapters:[
     {id:1,name:'Genin & Chunin — Criminels Débutants',entries:[
-      {id:101,name:'Mizuki',village:'Konohagakure',rank:3,status:'NEUTRALISE',bounty:'1,000,000 ryō',desc:"Traître de Konoha. Voleur du Parchemin des Sceaux. Se transforme en tigre géant sous malédiction.",media:[]},
-      {id:102,name:'Gatō',village:'Pays des Vagues',rank:2,status:'NEUTRALISE',bounty:'5,000,000 ryō',desc:"Criminel ordinaire contrôlant le Pays des Vagues par la terreur. Aucune capacité ninja.",media:[]},
+      {id:101,name:'Mizuki',village:'Konohagakure',rank:3,status:'NEUTRALISE',bounty:'1,000,000 ryō',desc:"Traître de Konoha. Voleur du Parchemin des Sceaux. Se transforme en tigre géant sous malé[...]
+      {id:102,name:'Gatō',village:'Pays des Vagues',rank:2,status:'NEUTRALISE',bounty:'5,000,000 ryō',desc:"Criminel ordinaire contrôlant le Pays des Vagues par la terreur. Aucune capacité ninja."[...]
     ]},
     {id:2,name:'Jōnin & S-Rank — Criminels Majeurs',entries:[
-      {id:201,name:'Zabuza Momochi',village:'Kirigakure',rank:8,status:'NEUTRALISE',bounty:'15,000,000 ryō',desc:"Ancien des Sept Épéistes du Brouillard. Expert Kiri no Jutsu. Épée démoniaque Kubikiribocho. Très dangereux.",media:[]},
-      {id:202,name:'Itachi Uchiha',village:'Konohagakure',rank:10,status:'NEUTRALISE',bounty:'30,000,000 ryō',desc:"Génie Uchiha. Amaterasu, Tsukuyomi, Susano'o complet. A massacré son clan. Ex-Akatsuki. NE PAS APPROCHER.",media:[]},
+      {id:201,name:'Zabuza Momochi',village:'Kirigakure',rank:8,status:'NEUTRALISE',bounty:'15,000,000 ryō',desc:"Ancien des Sept Épéistes du Brouillard. Expert Kiri no Jutsu. Épée démoniaque Ku[...]
+      {id:202,name:'Itachi Uchiha',village:'Konohagakure',rank:10,status:'NEUTRALISE',bounty:'30,000,000 ryō',desc:"Génie Uchiha. Amaterasu, Tsukuyomi, Susano'o complet. A massacré son clan. Ex-Aka[...]
     ]}
   ]},
   clans:{chapters:[
     {id:10,name:'Alliances Interdites',entries:[
-      {id:1001,name:'Akatsuki',leader:'Pain / Nagato',alliance:'Indépendant',members:'~10',rank:12,status:'ACTIF',desc:"Organisation criminelle recrutant les jinchūriki et ninjas S-Rank. Objectif : domination mondiale. Danger extrême.",media:[]},
+      {id:1001,name:'Akatsuki',leader:'Pain / Nagato',alliance:'Indépendant',members:'~10',rank:12,status:'ACTIF',desc:"Organisation criminelle recrutant les jinchūriki et ninjas S-Rank. Objectif : [...]
     ]}
   ]},
   requests:[],
@@ -229,7 +230,7 @@ function saveGhCfg(){
 }
 
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function mkSealSvg(sz,op){return`<svg width="${sz}" height="${sz}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="#8b0000" stroke-width="1.2" opacity="${op}"/><g transform="translate(50,50)" fill="none" stroke="#8b0000" stroke-width="1.2" opacity="${op}"><ellipse rx="11" ry="18" transform="rotate(-30)"/><ellipse rx="11" ry="18" transform="rotate(30)"/><ellipse rx="11" ry="18" transform="rotate(90)"/><circle r="3.5" fill="#8b0000" opacity="${op}"/></g></svg>`}
+function mkSealSvg(sz,op){return`<svg width="${sz}" height="${sz}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="#8b0000" stroke-width="1.2" opacity="${op}"/><g transform="t[...]
 function isYT(url){return url&&(url.includes('youtube.com')||url.includes('youtu.be'))}
 function ytEmbed(url){const m=url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);return m?`https://www.youtube.com/embed/${m[1]}`:''}
 function getPortrait(media){if(!media||!media.length)return null;const p=media.find(m=>m.portrait&&m.type==='image');if(p)return p;return media.find(m=>m.type==='image')||null}
@@ -330,7 +331,7 @@ function mkEntryCard(entry, isClan){
 }
 
 function mkBlank(){return`<div class="ct-blank">— —</div>`}
-function mkBack(isClans){return`<div class="ct-back">${mkSealSvg(40,.75)}<div class="b-fin">— FIN DU REGISTRE —</div><div class="b-note">Document classifié — ${isClans?'Registre des Clans':'Registre des Criminels'}</div></div>`}
+function mkBack(isClans){return`<div class="ct-back">${mkSealSvg(40,.75)}<div class="b-fin">— FIN DU REGISTRE —</div><div class="b-note">Document classifié — ${isClans?'Registre des Clans':'Reg[...]
 
 function buildSpreads(){
   const isClans = curView==='clans';
@@ -609,7 +610,7 @@ function saveEnemy(){
   if(!selChE){toast('Sélectionnez un chapitre');return}
   const nm=document.getElementById('ef-nm').value.trim();if(!nm){toast('Nom requis');return}
   const eid=document.getElementById('ef-id').value;
-  const d={name:nm,rank:+document.getElementById('ef-rk').value||1,status:document.getElementById('ef-st').value,village:document.getElementById('ef-vl').value.trim(),bounty:document.getElementById('ef-bn').value.trim(),desc:document.getElementById('ef-dc').value.trim(),media:collectMedia('ef')};
+  const d={name:nm,rank:+document.getElementById('ef-rk').value||1,status:document.getElementById('ef-st').value,village:document.getElementById('ef-vl').value.trim(),bounty:document.getElementById('e[...]
   if(eid){for(const c of data.book.chapters){const e=c.entries.find(x=>x.id===+eid);if(e){Object.assign(e,d);break}}}
   else{const ch=data.book.chapters.find(c=>c.id===selChE);if(ch)ch.entries.push({id:data.nid++,...d})}
   cancelEnemy();saveData();renderEList();toast('Ennemi enregistré');
@@ -673,7 +674,7 @@ function saveClan(){
   if(!selChCl){toast('Sélectionnez un chapitre');return}
   const nm=document.getElementById('clf-nm').value.trim();if(!nm){toast('Nom requis');return}
   const cid=document.getElementById('clf-id').value;
-  const d={name:nm,rank:+document.getElementById('clf-rk').value||1,status:document.getElementById('clf-st').value,alliance:document.getElementById('clf-al').value.trim(),leader:document.getElementById('clf-ld').value.trim(),members:document.getElementById('clf-mb').value.trim(),desc:document.getElementById('clf-dc').value.trim(),media:collectMedia('clf')};
+  const d={name:nm,rank:+document.getElementById('clf-rk').value||1,status:document.getElementById('clf-st').value,alliance:document.getElementById('clf-al').value.trim(),leader:document.getElementByI[...]
   if(cid){for(const c of data.clans.chapters){const e=c.entries.find(x=>x.id===+cid);if(e){Object.assign(e,d);break}}}
   else{const ch=data.clans.chapters.find(c=>c.id===selChCl);if(ch)ch.entries.push({id:data.nid++,...d})}
   cancelClan();saveData();renderClList();toast('Clan enregistré');
@@ -795,18 +796,26 @@ function ghSaveConfig(){
   ghCfg.file=document.getElementById('gh-file').value.trim()||'bingo-data.json';
   ghCfg.token=document.getElementById('gh-token').value.trim();
   saveGhCfg();
-  toast('Config GitHub sauvegardée');
+  
+  // Redémarrer la sync auto si elle était activée
+  const checkbox = document.getElementById('gh-auto-sync');
+  if (checkbox && checkbox.checked) {
+    stopAutoSync();
+    startAutoSync();
+  }
+  
+  toast('✓ Config GitHub sauvegardée');
 }
 
 async function ghPush(){
-  if(!ghCfg.user||!ghCfg.repo||!ghCfg.token){toast('⚠️ Config GitHub incomplète');return}
+  if(!ghCfg.user||!ghCfg.repo||!ghCfg.token){return}
   const url=`https://api.github.com/repos/${ghCfg.user}/${ghCfg.repo}/contents/${ghCfg.file}`;
   try{
     const res=await fetch(url,{headers:{'Authorization':`token ${ghCfg.token}`}});
     let sha='';
     if(res.ok){const json=await res.json();sha=json.sha}
     const content=btoa(JSON.stringify(data,null,2));
-    const pushRes=await fetch(url,{method:'PUT',headers:{'Authorization':`token ${ghCfg.token}`,'Content-Type':'application/json'},body:JSON.stringify({message:'📝 Sync via BingoBook',content,branch:ghCfg.branch,sha:sha||undefined})});
+    const pushRes=await fetch(url,{method:'PUT',headers:{'Authorization':`token ${ghCfg.token}`,'Content-Type':'application/json'},body:JSON.stringify({message:'📝 Sync via BingoBook',content,branch[...]
     if(pushRes.ok){
       document.getElementById('gh-status').innerHTML='<div class="gh-status gh-ok">✓ Données poussées vers GitHub</div>';
       setTimeout(()=>{document.getElementById('gh-status').innerHTML=''},3000);
