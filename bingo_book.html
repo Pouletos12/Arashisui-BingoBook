@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bingo Book — Bloodlines</title>
+<!-- MODÉRATEURS : point doré bas-droite | mot de passe : bloodlines -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{min-height:100%;background:#05050e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Crimson Text',Georgia,serif;color:#1e0f00;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(100,0,0,.09) 0%,transparent 70%),radial-gradient(ellipse 30% 30% at 20% 80%,rgba(200,130,0,.04) 0%,transparent 60%)}
+
+/* LANDING */
+#landing{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2rem;animation:fadeUp .9s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.closed-book{width:190px;height:265px;cursor:pointer;filter:drop-shadow(0 20px 50px rgba(120,0,0,.55)) drop-shadow(0 4px 16px rgba(0,0,0,.9));transition:transform .45s ease,filter .45s ease}
+.closed-book:hover{transform:scale(1.05) rotateY(-7deg) rotateX(2deg);filter:drop-shadow(0 30px 70px rgba(160,0,0,.65)) drop-shadow(0 4px 16px rgba(0,0,0,.9))}
+.cover-face{width:100%;height:100%;background:linear-gradient(160deg,#07071a 0%,#0d0d22 55%,#07071a 100%);border-radius:2px 7px 7px 2px;border-left:9px solid #020208;border-right:1px solid #1c1c35;border-top:1px solid #1c1c35;border-bottom:1px solid #1c1c35;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.65rem;position:relative;overflow:hidden}
+.cover-face::before{content:'';position:absolute;inset:10px;border:1px solid rgba(200,150,12,.22);pointer-events:none}
+.cover-face::after{content:'';position:absolute;left:0;top:0;width:11px;height:100%;background:linear-gradient(90deg,#010106,#090918 65%,rgba(200,150,12,.07))}
+@keyframes sealGlow{0%,100%{opacity:.75;filter:drop-shadow(0 0 4px rgba(200,150,12,.2))}50%{opacity:1;filter:drop-shadow(0 0 14px rgba(200,150,12,.55))}}
+.cover-seal{width:72px;height:72px;animation:sealGlow 3.5s ease-in-out infinite}
+@keyframes titleGlow{0%,100%{text-shadow:0 0 12px rgba(200,150,12,.3)}50%{text-shadow:0 0 22px rgba(200,150,12,.65)}}
+.cover-title{font-family:'Cinzel Decorative',serif;color:#c8960c;font-size:.82rem;letter-spacing:.13em;text-align:center;line-height:1.4;animation:titleGlow 3.5s ease-in-out infinite}
+.cover-title small{display:block;font-size:.5rem;color:rgba(200,150,12,.5);letter-spacing:.32em;margin-top:3px}
+.cover-kanji{position:absolute;bottom:13px;font-size:1.4rem;color:rgba(200,150,12,.12);letter-spacing:.45em}
+#open-btn{background:transparent;border:1px solid rgba(200,150,12,.32);color:rgba(200,150,12,.75);font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.26em;padding:.58rem 2.2rem;cursor:pointer;transition:all .3s;text-transform:uppercase}
+#open-btn:hover{background:rgba(200,150,12,.08);border-color:rgba(200,150,12,.7);color:#c8960c;box-shadow:0 0 22px rgba(200,150,12,.13)}
+.landing-note{font-family:'Cinzel',serif;font-size:.48rem;letter-spacing:.22em;color:rgba(200,150,12,.18);text-align:center}
+
+/* VIEW TABS */
+.view-tabs{display:flex;gap:3px;margin-bottom:1rem;z-index:1;position:relative}
+.vtab{padding:7px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(200,150,12,.2);color:rgba(200,150,12,.45);font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.12em;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.vtab.on{background:rgba(200,150,12,.12);color:#c8960c;border-color:rgba(200,150,12,.6)}
+.vtab:hover:not(.on){background:rgba(200,150,12,.06);color:rgba(200,150,12,.7)}
+
+/* SCENE */
+#scene{display:none;flex-direction:column;align-items:center;gap:.8rem;position:relative;z-index:1}
+
+/* BOOK */
+.book-wrap{perspective:2800px}
+.book{width:860px;height:552px;position:relative;filter:drop-shadow(0 40px 80px rgba(0,0,0,.95)) drop-shadow(0 10px 30px rgba(0,0,0,.6))}
+.book::after{content:'';position:absolute;bottom:-18px;left:8%;width:84%;height:18px;background:radial-gradient(ellipse,rgba(0,0,0,.55) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+
+/* PAGES */
+.page{position:absolute;top:0;height:100%}
+#pg-left{left:0;width:calc(50% - 13px);background:linear-gradient(90deg,#b8a660 0%,#d8ca88 7%,#ece2b2 18%,#ece2b2 100%);border-radius:4px 0 0 4px;box-shadow:inset 5px 0 14px rgba(0,0,0,.14)}
+#pg-right{right:0;width:calc(50% - 13px);background:linear-gradient(270deg,#b8a660 0%,#d8ca88 7%,#ece2b2 18%,#ece2b2 100%);border-radius:0 4px 4px 0;box-shadow:inset -5px 0 14px rgba(0,0,0,.14)}
+.page::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;background-image:repeating-linear-gradient(180deg,transparent,transparent 27px,rgba(90,60,10,.065) 28px)}
+
+/* SPINE */
+.spine{position:absolute;left:calc(50% - 13px);width:26px;height:100%;z-index:15;background:linear-gradient(90deg,#010107,#07071e 30%,#0c0c28 50%,#07071e 70%,#010107);box-shadow:4px 0 10px rgba(0,0,0,.5),-4px 0 10px rgba(0,0,0,.5),inset 3px 0 8px rgba(200,150,12,.09),inset -3px 0 8px rgba(200,150,12,.09)}
+.spine::before{content:'';position:absolute;inset:22px 7px;border-left:1px solid rgba(200,150,12,.18);border-right:1px solid rgba(200,150,12,.18)}
+
+/* PAGE INNER */
+.pi{position:relative;z-index:2;padding:22px 20px 16px;height:100%;display:flex;flex-direction:column;overflow:hidden}
+.pn{position:absolute;bottom:8px;font-family:'Cinzel',serif;font-size:.6rem;color:rgba(60,35,8,.45);z-index:3}
+.pn-l{left:14px}.pn-r{right:14px}
+
+/* FLIPPER */
+.flipper{position:absolute;top:0;height:100%;transform-style:preserve-3d;z-index:30;pointer-events:none;display:none}
+.flipper.from-right{right:0;width:calc(50% - 13px);transform-origin:left center}
+.flipper.from-left{left:0;width:calc(50% - 13px);transform-origin:right center}
+.ff,.fb{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.ff{background:linear-gradient(270deg,#b8a660 0%,#d8ca88 7%,#ece2b2 18%,#ece2b2 100%)}
+.fb{background:linear-gradient(90deg,#b8a660 0%,#d8ca88 7%,#ece2b2 18%,#ece2b2 100%);transform:rotateY(180deg)}
+.ff::before,.fb::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;background-image:repeating-linear-gradient(180deg,transparent,transparent 27px,rgba(90,60,10,.065) 28px)}
+.ff::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.1),transparent 40%);pointer-events:none;z-index:4}
+.fb::after{content:'';position:absolute;inset:0;background:linear-gradient(270deg,rgba(0,0,0,.1),transparent 40%);pointer-events:none;z-index:4}
+
+/* PAGE CONTENT: COVER */
+.ct-cover{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;text-align:center;position:relative}
+.ct-cover .bg-kanji{position:absolute;font-size:8rem;color:rgba(50,20,0,.04);font-family:'Cinzel Decorative',serif;top:50%;left:50%;transform:translate(-50%,-50%);user-select:none;pointer-events:none}
+.ct-cover .cv-title{font-family:'Cinzel Decorative',serif;font-size:1.75rem;color:#8b0000;line-height:1.1;letter-spacing:.04em}
+.ct-cover .cv-sub{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.38em;color:rgba(50,20,0,.45);text-transform:uppercase}
+.ct-cover .cv-note{font-size:.7rem;line-height:1.65;color:rgba(50,20,0,.45);max-width:195px;margin-top:.2rem;font-style:italic}
+
+/* PAGE CONTENT: TOC */
+.toc-h{font-family:'Cinzel',serif;font-size:.95rem;color:#8b0000;border-bottom:2px solid #8b0000;padding-bottom:7px;margin-bottom:17px;letter-spacing:.1em}
+.toc-row{display:flex;align-items:baseline;padding:5px 0;border-bottom:1px dotted rgba(50,20,0,.14);cursor:pointer;transition:color .2s;font-family:'Cinzel',serif;font-size:.72rem}
+.toc-row:hover{color:#8b0000}
+.tr-name{max-width:58%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-dots{flex:1;border-bottom:1px dotted rgba(50,20,0,.18);margin:0 6px;position:relative;top:-3px}
+.tr-pg{white-space:nowrap;font-size:.62rem;color:rgba(50,20,0,.45)}
+
+/* PAGE CONTENT: RANKS LEGEND */
+.ct-ranks{height:100%;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 4px}
+.rk-title{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.38em;color:rgba(50,20,0,.55);text-transform:uppercase;margin-bottom:6px;text-align:center}
+.rk-row{display:flex;align-items:center;gap:7px;padding:2px 0}
+.rk-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.58rem;color:#fff;font-weight:700;flex-shrink:0;border:1.5px solid rgba(255,255,255,.15)}
+.rk-lbl{font-size:.65rem;font-family:'Cinzel',serif;color:rgba(50,20,0,.68)}
+.rk-num{font-size:.5rem;color:rgba(50,20,0,.35);margin-left:auto;font-family:'Cinzel',serif}
+
+/* PAGE CONTENT: CHAPTER HEADER */
+.ct-chapter{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.85rem;position:relative}
+.cc-bg{position:absolute;font-size:6.5rem;color:rgba(50,20,0,.03);font-family:'Cinzel',serif;bottom:28px;letter-spacing:.5em;user-select:none}
+.cc-num{font-family:'Cinzel Decorative',serif;font-size:.58rem;letter-spacing:.52em;color:rgba(50,20,0,.38);text-transform:uppercase}
+.cc-rule{width:52%;border:none;border-top:2px solid #8b0000;position:relative}
+.cc-rule::before,.cc-rule::after{content:'✦';position:absolute;top:-9px;color:#8b0000;font-size:.62rem}
+.cc-rule::before{left:-13px}.cc-rule::after{right:-13px}
+.cc-name{font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;color:#1e0f00;line-height:1.2}
+.cc-count{font-size:.7rem;color:rgba(50,20,0,.42)}
+
+/* PAGE CONTENT: ENEMY/CLAN CARD */
+.ct-card{height:100%;display:flex;flex-direction:column;position:relative}
+.ec-stamp{position:absolute;top:10px;left:9px;transform:rotate(-7deg);border:2px solid;padding:1px 5px;font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;z-index:10;opacity:.85}
+.ec-stamp.ACTIF{color:#c41111;border-color:#c41111}
+.ec-stamp.NEUTRALISE{color:#1a7a22;border-color:#1a7a22}
+.ec-stamp.DISPARU{color:#1a4a9b;border-color:#1a4a9b}
+.ec-stamp.MORT{color:#555;border-color:#555}
+.ec-stamp.DISSOUS{color:#555;border-color:#555}
+.ec-stamp.GUERRE{color:#c44411;border-color:#c44411}
+.ec-stamp.TREVE{color:#778822;border-color:#778822}
+
+.ec-photo{width:100%;height:160px;flex-shrink:0;background:linear-gradient(135deg,#c8b870,#d8c880);border:2px solid rgba(50,20,0,.38);position:relative;overflow:hidden;margin-bottom:7px}
+.ec-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.ec-photo .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;color:rgba(50,20,0,.18)}
+.ec-photo::before,.ec-photo::after{content:'';position:absolute;width:20px;height:8px;background:rgba(225,215,165,.78);z-index:4}
+.ec-photo::before{top:4px;left:4px;transform:rotate(-28deg);transform-origin:left center}
+.ec-photo::after{top:4px;right:4px;transform:rotate(28deg);transform-origin:right center}
+.ec-rank-badge{position:absolute;bottom:6px;right:6px;min-width:28px;height:28px;padding:0 4px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:.55rem;color:#fff;z-index:5;border:1.5px solid rgba(255,255,255,.22);white-space:nowrap}
+
+.ec-name{font-family:'Cinzel',serif;font-size:.92rem;font-weight:700;text-align:center;margin-bottom:2px;line-height:1.2}
+.ec-sub{font-size:.58rem;text-align:center;color:rgba(50,20,0,.52);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid rgba(50,20,0,.14)}
+.ec-desc{font-size:.7rem;line-height:1.48;color:rgba(50,20,0,.68);flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+
+/* Media gallery strip */
+.ec-gallery{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.ec-thumb{width:36px;height:36px;border:1px solid rgba(50,20,0,.3);cursor:pointer;overflow:hidden;flex-shrink:0;position:relative;background:#c8b870}
+.ec-thumb img{width:100%;height:100%;object-fit:cover}
+.ec-thumb .vid-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);color:#fff;font-size:.8rem}
+
+.ec-bounty{margin-top:4px;font-family:'Cinzel',serif;font-size:.6rem;color:#8b0000;text-align:right;padding-top:4px;border-top:1px solid rgba(50,20,0,.12)}
+.ec-wanted{position:absolute;bottom:44px;right:9px;transform:rotate(-12deg);border:2px solid rgba(170,0,0,.55);padding:2px 6px;font-family:'Cinzel',serif;font-size:.52rem;color:rgba(170,0,0,.55);letter-spacing:.2em;text-transform:uppercase}
+
+/* Clan specific */
+.ec-clan-badge{position:absolute;bottom:6px;left:6px;min-width:28px;height:28px;padding:0 4px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.52rem;color:rgba(255,255,255,.9);z-index:5;border:1.5px solid rgba(255,255,255,.22);background:rgba(0,0,0,.5);white-space:nowrap}
+
+/* Blank / back */
+.ct-blank{height:100%;display:flex;align-items:center;justify-content:center;opacity:.22;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.42em;color:rgba(50,20,0,.6)}
+.ct-back{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;text-align:center;opacity:.45}
+.ct-back .b-fin{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.42em;color:rgba(50,20,0,.5)}
+.ct-back .b-note{font-size:.65rem;color:rgba(50,20,0,.38);font-style:italic;max-width:175px;line-height:1.5}
+
+/* NAV */
+.nav-row{display:flex;align-items:center;gap:2.5rem}
+.nav-btn{width:42px;height:42px;background:rgba(200,150,12,.07);border:1px solid rgba(200,150,12,.26);color:rgba(200,150,12,.65);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;clip-path:polygon(12% 0,88% 0,100% 12%,100% 88%,88% 100%,12% 100%,0 88%,0 12%)}
+.nav-btn:hover:not(:disabled){background:rgba(200,150,12,.17);color:#c8960c;border-color:rgba(200,150,12,.72)}
+.nav-btn:disabled{opacity:.15;cursor:not-allowed}
+.spread-ind{font-family:'Cinzel',serif;font-size:.62rem;color:rgba(200,150,12,.38);letter-spacing:.22em}
+.nav-hint{font-family:'Cinzel',serif;font-size:.46rem;letter-spacing:.2em;color:rgba(200,150,12,.14);text-align:center}
+
+/* DEMANDES SECTION */
+#demandes-view{display:none;width:860px;max-height:600px;overflow-y:auto;position:relative;z-index:1}
+.demande-scroll{background:linear-gradient(180deg,#ece2b2,#e4d890);border:2px solid rgba(50,20,0,.25);border-radius:4px;padding:32px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.8)}
+.demande-scroll::before{content:'';position:absolute;inset:10px;border:1px solid rgba(50,20,0,.12);pointer-events:none;border-radius:2px}
+.demande-scroll::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:repeating-linear-gradient(180deg,transparent,transparent 27px,rgba(90,60,10,.055) 28px)}
+.dscroll-inner{position:relative;z-index:1}
+.dem-title{font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:#8b0000;text-align:center;margin-bottom:6px}
+.dem-sub{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.2em;color:rgba(50,20,0,.5);text-align:center;margin-bottom:20px;text-transform:uppercase}
+.dem-hr{border:none;border-top:1px solid rgba(50,20,0,.2);margin:18px 0}
+.dem-lbl{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.15em;color:rgba(50,20,0,.6);display:block;margin-bottom:4px;text-transform:uppercase}
+.dem-in{width:100%;background:rgba(255,255,255,.4);border:1px solid rgba(50,20,0,.28);color:#1e0f00;padding:8px 10px;font-family:'Crimson Text',serif;font-size:.92rem;margin-bottom:12px;outline:none;transition:border-color .2s}
+.dem-in:focus{border-color:rgba(50,20,0,.6)}
+textarea.dem-in{height:80px;resize:vertical}
+select.dem-in option{background:#ece2b2}
+.dem-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dem-submit{width:100%;padding:10px;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.2em;background:rgba(139,0,0,.15);border:2px solid rgba(139,0,0,.4);color:#8b0000;cursor:pointer;transition:all .3s;text-transform:uppercase;margin-top:4px}
+.dem-submit:hover{background:rgba(139,0,0,.25);border-color:#8b0000}
+.req-list{margin-top:20px}
+.req-h{font-family:'Cinzel',serif;font-size:.75rem;letter-spacing:.15em;color:rgba(50,20,0,.6);margin-bottom:10px;border-bottom:1px solid rgba(50,20,0,.15);padding-bottom:6px}
+.req-item{background:rgba(255,255,255,.3);border:1px solid rgba(50,20,0,.18);padding:10px;margin-bottom:6px;font-size:.75rem;color:rgba(50,20,0,.75)}
+.req-item strong{font-family:'Cinzel',serif;font-size:.78rem}
+.req-status{display:inline-block;padding:1px 6px;border:1px solid;font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.1em;margin-left:6px}
+.req-status.PENDING{color:#c86000;border-color:#c86000}
+.req-status.APPROUVE{color:#1a7a22;border-color:#1a7a22}
+.req-status.REJETE{color:#555;border-color:#555}
+
+/* ADMIN TRIGGER */
+#admin-trigger{position:fixed;bottom:16px;right:16px;width:7px;height:7px;border-radius:50%;background:rgba(200,150,12,.18);cursor:pointer;transition:all .35s;z-index:10}
+#admin-trigger:hover{background:rgba(200,150,12,.85);transform:scale(2.6)}
+
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.pwd-box{background:#0a0a16;border:1px solid rgba(200,150,12,.28);padding:36px 30px;text-align:center;min-width:275px}
+.pwd-box h3{font-family:'Cinzel',serif;color:#c8960c;font-size:.82rem;letter-spacing:.22em;margin-bottom:22px}
+.pwd-in{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(200,150,12,.24);color:#e8d5a0;padding:10px;text-align:center;font-family:'Cinzel',serif;letter-spacing:.32em;font-size:.92rem;margin-bottom:13px;outline:none;transition:border-color .2s}
+.pwd-in:focus{border-color:rgba(200,150,12,.6)}
+.pwd-err{color:#cc3333;font-size:.7rem;margin-bottom:12px;display:none}
+.btn-row{display:flex;gap:10px;justify-content:center}
+
+/* LIGHTBOX */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+#lightbox.open{display:flex}
+.lb-img{max-width:90vw;max-height:75vh;object-fit:contain;border:1px solid rgba(200,150,12,.2)}
+.lb-video{width:min(90vw,900px);aspect-ratio:16/9;border:1px solid rgba(200,150,12,.2)}
+.lb-cap{font-family:'Cinzel',serif;font-size:.72rem;color:rgba(200,150,12,.7);letter-spacing:.15em}
+.lb-nav{display:flex;gap:1rem;align-items:center}
+.lb-btn{background:transparent;border:1px solid rgba(200,150,12,.3);color:rgba(200,150,12,.7);font-family:'Cinzel',serif;font-size:.65rem;padding:6px 16px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.1em}
+.lb-btn:hover{background:rgba(200,150,12,.1);color:#c8960c}
+#lb-close{position:absolute;top:16px;right:20px;background:transparent;border:none;color:rgba(200,150,12,.5);font-size:1.5rem;cursor:pointer;transition:color .2s}
+#lb-close:hover{color:#c8960c}
+
+/* ADMIN PANEL */
+#admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:150;align-items:flex-start;justify-content:center;padding:16px 12px;overflow-y:auto}
+#admin-overlay.open{display:flex}
+.ap{background:#0a0a16;border:1px solid rgba(200,150,12,.26);width:100%;max-width:700px;padding:24px;position:relative;margin:auto}
+.ap-h{font-family:'Cinzel',serif;color:#c8960c;font-size:.9rem;letter-spacing:.2em;border-bottom:1px solid rgba(200,150,12,.22);padding-bottom:10px;margin-bottom:16px}
+.ap-x{position:absolute;top:14px;right:14px;background:transparent;border:none;color:rgba(200,150,12,.38);font-size:1.1rem;cursor:pointer;transition:color .2s}
+.ap-x:hover{color:#c8960c}
+.tabs{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:16px}
+.tab{flex:1;min-width:80px;padding:6px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(200,150,12,.16);color:rgba(200,150,12,.42);font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.08em;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.tab.on,.tab:hover{background:rgba(200,150,12,.09);color:#c8960c;border-color:rgba(200,150,12,.48)}
+.ap-lbl{color:rgba(200,150,12,.58);font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.15em;display:block;margin-bottom:4px;text-transform:uppercase}
+.ap-in{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(200,150,12,.2);color:#e8d5a0;padding:7px 10px;font-family:'Crimson Text',serif;font-size:.88rem;margin-bottom:10px;outline:none;transition:border-color .2s}
+.ap-in:focus{border-color:rgba(200,150,12,.58)}
+textarea.ap-in{height:65px;resize:vertical}
+select.ap-in option{background:#0a0a16}
+.ap-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ap-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ap-hr{border:none;border-top:1px solid rgba(200,150,12,.12);margin:14px 0}
+.ap-sec{font-family:'Cinzel',serif;font-size:.68rem;color:rgba(200,150,12,.75);margin-bottom:12px;letter-spacing:.12em}
+.btn{padding:6px 14px;font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.1em;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.btn-p{background:rgba(110,0,0,.35);border:1px solid rgba(190,45,45,.42);color:#ff8888}
+.btn-p:hover{background:rgba(110,0,0,.6)}
+.btn-g{background:transparent;border:1px solid rgba(200,150,12,.22);color:rgba(200,150,12,.52)}
+.btn-g:hover{border-color:#c8960c;color:#c8960c}
+.btn-d{background:transparent;border:1px solid rgba(110,0,0,.32);color:rgba(190,45,45,.48);font-size:.56rem;padding:3px 7px}
+.btn-d:hover{background:rgba(110,0,0,.28);color:#ff5555}
+.btn-s{background:transparent;border:1px solid rgba(200,150,12,.2);color:rgba(200,150,12,.48);font-size:.56rem;padding:3px 7px}
+.btn-s:hover{border-color:rgba(200,150,12,.68);color:#c8960c}
+.btn-green{background:rgba(0,80,0,.3);border:1px solid rgba(50,180,50,.4);color:#88ff88;font-size:.58rem;padding:4px 10px}
+.btn-green:hover{background:rgba(0,80,0,.6)}
+.ch-sel-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.ch-sel{padding:4px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(200,150,12,.16);color:rgba(200,150,12,.42);font-family:'Cinzel',serif;font-size:.6rem;cursor:pointer;transition:all .2s}
+.ch-sel.on,.ch-sel:hover{background:rgba(200,150,12,.09);color:#c8960c;border-color:rgba(200,150,12,.48)}
+.e-item,.c-item,.ch-item,.req-adm-item{display:flex;align-items:center;gap:6px;padding:7px 11px;background:rgba(255,255,255,.03);border:1px solid rgba(200,150,12,.12);margin-bottom:4px}
+.e-nm{font-family:'Cinzel',serif;color:#e8d5a0;font-size:.78rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtag{font-family:'Cinzel',serif;font-size:.55rem;padding:1px 5px;border:1px solid;flex-shrink:0;white-space:nowrap}
+.empty-lbl{color:rgba(200,150,12,.22);font-size:.72rem;text-align:center;padding:14px}
+
+/* Media admin rows */
+.media-row{display:flex;gap:5px;align-items:flex-start;padding:6px 8px;background:rgba(255,255,255,.03);border:1px solid rgba(200,150,12,.12);margin-bottom:4px}
+.media-row .media-url{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(200,150,12,.2);color:#e8d5a0;padding:4px 7px;font-size:.78rem;outline:none;font-family:'Crimson Text',serif}
+.media-row select{background:rgba(255,255,255,.04);border:1px solid rgba(200,150,12,.2);color:#e8d5a0;padding:4px 5px;font-size:.72rem;outline:none;flex-shrink:0}
+.media-row select option{background:#0a0a16}
+.media-portrait-chk{accent-color:#c8960c;cursor:pointer}
+
+/* GitHub tab */
+.gh-note{background:rgba(200,150,12,.06);border:1px solid rgba(200,150,12,.2);padding:10px;font-size:.75rem;color:rgba(200,150,12,.7);line-height:1.6;margin-bottom:14px}
+.gh-status{font-family:'Cinzel',serif;font-size:.68rem;padding:6px 10px;margin-top:8px;text-align:center}
+.gh-ok{color:#88ff88;background:rgba(0,80,0,.2);border:1px solid rgba(50,180,50,.3)}
+.gh-err{color:#ff8888;background:rgba(80,0,0,.2);border:1px solid rgba(180,50,50,.3)}
+
+/* TOAST */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(70px);background:#0a0a16;border:1px solid rgba(200,150,12,.42);color:#c8960c;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.15em;padding:8px 20px;transition:transform .38s;z-index:700;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:900px){.book,.book-wrap{width:min(98vw,860px)}.book{height:calc(min(98vw,860px) * 552/860)}#pg-left,#pg-right,.flipper.from-right,.flipper.from-left{width:calc(50% - 10px)}.spine{left:calc(50% - 10px);width:20px}.pi{padding:14px 12px 12px}.ec-photo{height:130px}#demandes-view{width:min(98vw,860px)}.ap-3{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+  <div class="closed-book" onclick="openBook()">
+    <div class="cover-face">
+      <svg class="cover-seal" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#c8960c" stroke-width="1.2" opacity=".52"/>
+        <circle cx="50" cy="50" r="39" fill="none" stroke="#c8960c" stroke-width=".4" opacity=".32"/>
+        <g transform="translate(50,50)" fill="none" stroke="#c8960c" stroke-width="1.55" opacity=".82">
+          <ellipse rx="13" ry="22" transform="rotate(-30)"/><ellipse rx="13" ry="22" transform="rotate(30)"/><ellipse rx="13" ry="22" transform="rotate(90)"/>
+          <circle r="4.8" fill="#c8960c" fill-opacity=".42"/>
+        </g>
+        <path id="sarc" d="M50,8 A42,42 0 0,1 92,50 A42,42 0 0,1 50,92 A42,42 0 0,1 8,50 A42,42 0 0,1 50,8" fill="none"/>
+        <text font-family="Cinzel,serif" font-size="6.2" fill="#c8960c" fill-opacity=".62" letter-spacing="2.2"><textPath href="#sarc">BINGO BOOK • BLOODLINES •</textPath></text>
+      </svg>
+      <div class="cover-title">BINGO BOOK<small>忍者暗殺記録</small></div>
+      <div class="cover-kanji">忍</div>
+    </div>
+  </div>
+  <button id="open-btn" onclick="openBook()">— OUVRIR LE REGISTRE —</button>
+  <div class="landing-note">DOCUMENTS CLASSIFIÉS — SHINOBIS AUTORISÉS UNIQUEMENT</div>
+</div>
+
+<!-- SCENE -->
+<div id="scene">
+  <div class="view-tabs">
+    <button class="vtab on" id="vt-book" onclick="switchView('book')">📖 BINGO BOOK</button>
+    <button class="vtab" id="vt-clans" onclick="switchView('clans')">⚔️ BINGO CLANS</button>
+    <button class="vtab" id="vt-demandes" onclick="switchView('demandes')">📝 DEMANDES</button>
+  </div>
+
+  <!-- BOOK -->
+  <div id="book-wrap-el">
+    <div class="book-wrap">
+      <div class="book" id="book">
+        <div class="page" id="pg-left"><div class="pi" id="pl-c"></div><span class="pn pn-l" id="pl-n"></span></div>
+        <div class="spine"></div>
+        <div class="page" id="pg-right"><div class="pi" id="pr-c"></div><span class="pn pn-r" id="pr-n"></span></div>
+        <div class="flipper from-right" id="flipper" style="display:none">
+          <div class="ff"><div class="pi" id="ff-c"></div><span class="pn" id="ff-n" style="right:14px"></span></div>
+          <div class="fb"><div class="pi" id="fb-c"></div><span class="pn" id="fb-n" style="left:14px"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row" style="margin-top:.8rem">
+      <button class="nav-btn" id="prev-btn" onclick="goBack()">&#9664;</button>
+      <span class="spread-ind" id="sp-ind">— / —</span>
+      <button class="nav-btn" id="next-btn" onclick="goNext()">&#9654;</button>
+    </div>
+    <div class="nav-hint">FLÈCHES CLAVIER · SWIPE TACTILE</div>
+  </div>
+
+  <!-- DEMANDES -->
+  <div id="demandes-view">
+    <div class="demande-scroll">
+      <div class="dscroll-inner">
+        <div class="dem-title">DEMANDE D'AJOUT AU BINGO BOOK</div>
+        <div class="dem-sub">Soumettez un rapport — les modérateurs examineront votre dossier</div>
+        <div class="dem-2">
+          <div><label class="dem-lbl">NOM DU CRIMINEL / CLAN</label><input class="dem-in" id="dq-target" type="text" placeholder="Nom en jeu"></div>
+          <div>
+            <label class="dem-lbl">RANG ESTIMÉ</label>
+            <select class="dem-in" id="dq-rank"><option value="">— Sélectionner —</option></select>
+          </div>
+        </div>
+        <label class="dem-lbl">TYPE DE SIGNALEMENT</label>
+        <select class="dem-in" id="dq-type">
+          <option value="ennemi">Ennemi individuel (Bingo Book)</option>
+          <option value="clan">Clan dangereux (Bingo Clans)</option>
+        </select>
+        <label class="dem-lbl">RAISON / PREUVES</label>
+        <textarea class="dem-in" id="dq-reason" placeholder="Décrivez les crimes, menaces ou comportements dangereux..."></textarea>
+        <label class="dem-lbl">LIEN PREUVE (screenshot / vidéo)</label>
+        <input class="dem-in" id="dq-proof" type="text" placeholder="https://...">
+        <label class="dem-lbl">VOTRE NOM EN JEU</label>
+        <input class="dem-in" id="dq-by" type="text" placeholder="Votre nom de shinobi">
+        <button class="dem-submit" onclick="submitDemande()">⬡ SOUMETTRE LA DEMANDE ⬡</button>
+        <div class="dem-hr"></div>
+        <div class="req-list">
+          <div class="req-h">DEMANDES EN COURS</div>
+          <div id="pub-req-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin dot -->
+<div id="admin-trigger" onclick="showPwd()"></div>
+
+<!-- PASSWORD MODAL -->
+<div class="overlay" id="pwd-modal">
+  <div class="pwd-box">
+    <h3>⬡ ACCÈS MODÉRATEUR ⬡</h3>
+    <input class="pwd-in" type="password" id="pwd-in" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPwd()">
+    <div class="pwd-err" id="pwd-err">Code d'accès incorrect.</div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="checkPwd()">ENTRER</button>
+      <button class="btn btn-g" onclick="closePwd()">RETOUR</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="if(event.target===this)closeLB()">
+  <button id="lb-close" onclick="closeLB()">✕</button>
+  <div id="lb-content"></div>
+  <div class="lb-cap" id="lb-cap"></div>
+  <div class="lb-nav">
+    <button class="lb-btn" id="lb-prev" onclick="lbNav(-1)">◄ PRÉCÉDENT</button>
+    <button class="lb-btn" id="lb-next" onclick="lbNav(1)">SUIVANT ►</button>
+  </div>
+</div>
+
+<!-- ADMIN OVERLAY -->
+<div id="admin-overlay">
+  <div class="ap">
+    <button class="ap-x" onclick="closeAdmin()">✕</button>
+    <div class="ap-h">⬡ PANNEAU DE MODÉRATION ⬡</div>
+    <div class="tabs">
+      <button class="tab on" id="tb-e"  onclick="switchTab('e')">ENNEMIS</button>
+      <button class="tab"    id="tb-cl" onclick="switchTab('cl')">CLANS</button>
+      <button class="tab"    id="tb-ch" onclick="switchTab('ch')">CHAPITRES</button>
+      <button class="tab"    id="tb-dq" onclick="switchTab('dq')">DEMANDES</button>
+      <button class="tab"    id="tb-gh" onclick="switchTab('gh')">GITHUB</button>
+    </div>
+
+    <!-- TAB: ENNEMIS -->
+    <div id="tab-e">
+      <div class="ap-lbl" style="margin-bottom:7px">CHAPITRE CIBLE</div>
+      <div class="ch-sel-wrap" id="e-ch-sel"></div>
+      <div id="elist"></div>
+      <div class="ap-hr"></div>
+      <div class="ap-sec" id="ef-ttl">AJOUTER UN ENNEMI</div>
+      <input type="hidden" id="ef-id">
+      <label class="ap-lbl">NOM EN JEU</label><input class="ap-in" id="ef-nm" type="text" placeholder="Nom du joueur">
+      <div class="ap-3">
+        <div><label class="ap-lbl">RANG</label><select class="ap-in" id="ef-rk"></select></div>
+        <div><label class="ap-lbl">STATUT</label><select class="ap-in" id="ef-st"><option value="ACTIF">ACTIF</option><option value="NEUTRALISE">NEUTRALISÉ</option><option value="DISPARU">DISPARU</option><option value="MORT">MORT</option></select></div>
+        <div><label class="ap-lbl">VILLAGE</label><input class="ap-in" id="ef-vl" type="text" placeholder="Village"></div>
+      </div>
+      <label class="ap-lbl">PRIME / RÉCOMPENSE</label><input class="ap-in" id="ef-bn" type="text" placeholder="Ex: 30,000 ryō">
+      <label class="ap-lbl">DESCRIPTION</label><textarea class="ap-in" id="ef-dc" placeholder="Capacités, crimes, danger..."></textarea>
+      <div class="ap-lbl" style="margin-bottom:6px">MÉDIAS (images & vidéos)</div>
+      <div id="ef-media-list"></div>
+      <button class="btn btn-g" style="margin-bottom:10px" onclick="addMediaRow('ef')">+ AJOUTER UN MÉDIA</button>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-g" onclick="cancelEnemy()">ANNULER</button>
+        <button class="btn btn-p" onclick="saveEnemy()">ENREGISTRER</button>
+      </div>
+    </div>
+
+    <!-- TAB: CLANS -->
+    <div id="tab-cl" style="display:none">
+      <div class="ap-lbl" style="margin-bottom:7px">CHAPITRE CIBLE</div>
+      <div class="ch-sel-wrap" id="cl-ch-sel"></div>
+      <div id="cllist"></div>
+      <div class="ap-hr"></div>
+      <div class="ap-sec" id="clf-ttl">AJOUTER UN CLAN</div>
+      <input type="hidden" id="clf-id">
+      <label class="ap-lbl">NOM DU CLAN</label><input class="ap-in" id="clf-nm" type="text" placeholder="Nom du clan">
+      <div class="ap-3">
+        <div><label class="ap-lbl">RANG</label><select class="ap-in" id="clf-rk"></select></div>
+        <div><label class="ap-lbl">STATUT</label><select class="ap-in" id="clf-st"><option value="ACTIF">ACTIF</option><option value="DISSOUS">DISSOUS</option><option value="GUERRE">EN GUERRE</option><option value="TREVE">TRÊVE</option><option value="NEUTRALISE">NEUTRALISÉ</option></select></div>
+        <div><label class="ap-lbl">ALLIANCE</label><input class="ap-in" id="clf-al" type="text" placeholder="Village / Alliance"></div>
+      </div>
+      <div class="ap-2">
+        <div><label class="ap-lbl">CHEF DU CLAN</label><input class="ap-in" id="clf-ld" type="text" placeholder="Nom du chef"></div>
+        <div><label class="ap-lbl">NB MEMBRES</label><input class="ap-in" id="clf-mb" type="text" placeholder="Ex: ~15"></div>
+      </div>
+      <label class="ap-lbl">DESCRIPTION</label><textarea class="ap-in" id="clf-dc" placeholder="Origines, menaces, tactiques..."></textarea>
+      <div class="ap-lbl" style="margin-bottom:6px">MÉDIAS (images & vidéos)</div>
+      <div id="clf-media-list"></div>
+      <button class="btn btn-g" style="margin-bottom:10px" onclick="addMediaRow('clf')">+ AJOUTER UN MÉDIA</button>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-g" onclick="cancelClan()">ANNULER</button>
+        <button class="btn btn-p" onclick="saveClan()">ENREGISTRER</button>
+      </div>
+    </div>
+
+    <!-- TAB: CHAPITRES -->
+    <div id="tab-ch" style="display:none">
+      <div style="display:flex;gap:4px;margin-bottom:14px">
+        <button class="ch-sel on" id="chs-book" onclick="switchChTab('book')">BINGO BOOK</button>
+        <button class="ch-sel" id="chs-clans" onclick="switchChTab('clans')">BINGO CLANS</button>
+      </div>
+      <div id="ch-list"></div>
+      <div class="ap-hr"></div>
+      <div class="ap-sec" id="cf-ttl">AJOUTER UN CHAPITRE</div>
+      <input type="hidden" id="cf-id"><input type="hidden" id="cf-type">
+      <label class="ap-lbl">NOM DU CHAPITRE</label><input class="ap-in" id="cf-nm" type="text" placeholder="Ex: Jōnin Haut Niveau — Traîtres">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-g" onclick="cancelChap()">ANNULER</button>
+        <button class="btn btn-p" onclick="saveChap()">ENREGISTRER</button>
+      </div>
+    </div>
+
+    <!-- TAB: DEMANDES -->
+    <div id="tab-dq" style="display:none">
+      <div id="adm-req-list"></div>
+    </div>
+
+    <!-- TAB: GITHUB -->
+    <div id="tab-gh" style="display:none">
+      <div class="gh-note">
+        ℹ️ <strong>Synchronisation GitHub</strong> — Permet à tous les visiteurs de voir vos modifications.<br>
+        1. Créez un repo GitHub (ex: <em>bloodlines-bingo</em>) avec un fichier <code>bingo-data.json</code> vide <code>{}</code>.<br>
+        2. Créez un token dans <em>Settings → Developer → Personal Access Tokens → Fine-grained</em> avec permission <em>Contents: Read & Write</em>.<br>
+        3. Renseignez les champs ci-dessous. Le token reste dans VOTRE navigateur uniquement.
+      </div>
+      <div class="ap-2">
+        <div><label class="ap-lbl">USERNAME GITHUB</label><input class="ap-in" id="gh-user" type="text" placeholder="votre-pseudo"></div>
+        <div><label class="ap-lbl">NOM DU REPO</label><input class="ap-in" id="gh-repo" type="text" placeholder="bloodlines-bingo"></div>
+      </div>
+      <div class="ap-2">
+        <div><label class="ap-lbl">BRANCHE</label><input class="ap-in" id="gh-branch" type="text" placeholder="main" value="main"></div>
+        <div><label class="ap-lbl">NOM DU FICHIER</label><input class="ap-in" id="gh-file" type="text" placeholder="bingo-data.json" value="bingo-data.json"></div>
+      </div>
+      <label class="ap-lbl">TOKEN (stocké localement, jamais partagé)</label>
+      <input class="ap-in" id="gh-token" type="password" placeholder="github_pat_...">
+      <div id="gh-status"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="ghSaveConfig()">SAUVEGARDER CONFIG</button>
+        <button class="btn btn-green" onclick="ghPush()">⬆ POUSSER VERS GITHUB</button>
+        <button class="btn btn-green" onclick="ghPull()">⬇ IMPORTER DEPUIS GITHUB</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast">Enregistré</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════════════
+const SK  = 'bingo_book_v5';
+const GK  = 'bingo_gh_v1';
+const PWD = 'bloodlines';
+
+const RANKS = [
+  {n:1,  label:'Genin',                color:'#3a6e3a'},
+  {n:2,  label:'Genin Expérimenté',    color:'#2a5e2a'},
+  {n:3,  label:'Chūnin',               color:'#5e5e00'},
+  {n:4,  label:'Fake Genin',           color:'#666'},
+  {n:5,  label:'Chūnin Expérimenté',   color:'#6e4800'},
+  {n:6,  label:'Jōnin Bas Niveau',     color:'#004e78'},
+  {n:7,  label:'Jōnin',                color:'#003878'},
+  {n:8,  label:'Jōnin Haut Niveau',    color:'#002868'},
+  {n:9,  label:'Jōnin Élite',          color:'#3a0068'},
+  {n:10, label:'S-Rank',               color:'#8b0000'},
+  {n:11, label:'Anbu',                 color:'#1c1c1c'},
+  {n:12, label:'Akatsuki',             color:'#450045'},
+  {n:13, label:'Kage',                 color:'#7a5500'},
+  {n:14, label:'Légende BingoBook',    color:'#8b0000'},
+];
+
+function rankInfo(n){return RANKS.find(r=>r.n===+n)||RANKS[0]}
+
+// ══════════════════════════════════════════════════════════════
+//  DEFAULT DATA
+// ══════════════════════════════════════════════════════════════
+const DEFAULT = {
+  book:{chapters:[
+    {id:1,name:'Genin & Chunin — Criminels Débutants',entries:[
+      {id:101,name:'Mizuki',village:'Konohagakure',rank:3,status:'NEUTRALISE',bounty:'1,000,000 ryō',desc:"Traître de Konoha. Voleur du Parchemin des Sceaux. Se transforme en tigre géant sous malédiction.",media:[]},
+      {id:102,name:'Gatō',village:'Pays des Vagues',rank:2,status:'NEUTRALISE',bounty:'5,000,000 ryō',desc:"Criminel ordinaire contrôlant le Pays des Vagues par la terreur. Aucune capacité ninja.",media:[]}
+    ]},
+    {id:2,name:'Jōnin & S-Rank — Criminels Majeurs',entries:[
+      {id:201,name:'Zabuza Momochi',village:'Kirigakure',rank:8,status:'NEUTRALISE',bounty:'15,000,000 ryō',desc:"Ancien des Sept Épéistes du Brouillard. Expert Kiri no Jutsu. Épée démoniaque Kubikiribocho. Très dangereux.",media:[]},
+      {id:202,name:'Itachi Uchiha',village:'Konohagakure',rank:10,status:'NEUTRALISE',bounty:'30,000,000 ryō',desc:"Génie Uchiha. Amaterasu, Tsukuyomi, Susano'o complet. A massacré son clan. Ex-Akatsuki. NE PAS APPROCHER.",media:[]}
+    ]}
+  ]},
+  clans:{chapters:[
+    {id:10,name:'Alliances Interdites',entries:[
+      {id:1001,name:'Akatsuki',leader:'Pain / Nagato',alliance:'Indépendant',members:'~10',rank:12,status:'ACTIF',desc:"Organisation criminelle recrutant les jinchūriki et ninjas S-Rank. Objectif : domination mondiale. Danger extrême.",media:[]}
+    ]}
+  ]},
+  requests:[],
+  nid:2000
+};
+
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let data     = JSON.parse(JSON.stringify(DEFAULT));
+let ghCfg    = {user:'',repo:'',branch:'main',file:'bingo-data.json',token:''};
+let spreads  = [];
+let cur      = 0;
+let busy     = false;
+let curView  = 'book';   // 'book' | 'clans'
+let selChE   = null;     // selected chapter id for enemy tab
+let selChCl  = null;     // selected chapter id for clan tab
+let curChTab = 'book';   // chapter admin subtab
+let lbItems  = [];
+let lbIdx    = 0;
+
+// ══════════════════════════════════════════════════════════════
+//  STORAGE
+// ══════════════════════════════════════════════════════════════
+function loadData(){
+  try{const s=localStorage.getItem(SK);if(s)data=JSON.parse(s)}catch(e){}
+  try{const g=localStorage.getItem(GK);if(g)ghCfg=JSON.parse(g)}catch(e){}
+}
+function saveData(){
+  try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
+  rebuild();
+}
+function saveGhCfg(){
+  try{localStorage.setItem(GK,JSON.stringify(ghCfg))}catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function mkSealSvg(sz,op){return`<svg width="${sz}" height="${sz}" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="#8b0000" stroke-width="1.2" opacity="${op}"/><g transform="translate(50,50)" fill="none" stroke="#8b0000" stroke-width="1.6" opacity="${op*1.2}"><ellipse rx="13" ry="22" transform="rotate(-30)"/><ellipse rx="13" ry="22" transform="rotate(30)"/><ellipse rx="13" ry="22" transform="rotate(90)"/><circle r="4.5" fill="#8b0000" fill-opacity="${op*.85}"/></g></svg>`}
+function isYT(url){return url&&(url.includes('youtube.com')||url.includes('youtu.be'))}
+function ytEmbed(url){const m=url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);return m?`https://www.youtube.com/embed/${m[1]}`:''}
+function getPortrait(media){if(!media||!media.length)return null;const p=media.find(m=>m.portrait&&m.type==='image');if(p)return p;return media.find(m=>m.type==='image')||null}
+function getGallery(media,portItem){if(!media)return[];return media.filter(m=>m!==portItem)}
+
+function rankBadgeHTML(rank){
+  const r=rankInfo(rank);
+  return`<div class="ec-rank-badge" style="background:${r.color}" title="${esc(r.label)}">${esc(r.n)}</div>`;
+}
+
+// populate rank selects
+function populateRankSelects(){
+  const opts=RANKS.map(r=>`<option value="${r.n}">${r.n} — ${r.label}</option>`).join('');
+  ['ef-rk','clf-rk'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts});
+  // Demandes dropdown
+  const dq=document.getElementById('dq-rank');
+  if(dq)dq.innerHTML=`<option value="">— Sélectionner —</option>`+opts;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE RENDERERS
+// ══════════════════════════════════════════════════════════════
+function mkCoverPage(isClans){
+  return`<div class="ct-cover">
+    <div class="bg-kanji">${isClans?'族':'忍'}</div>
+    ${mkSealSvg(52,.36)}
+    <div class="cv-title">${isClans?'BINGO<br>CLANS':'BINGO<br>BOOK'}</div>
+    <div class="cv-sub">${isClans?'Registre des Clans Dangereux':'Registre des Criminels'}</div>
+    <div class="cv-note">Document classifié. Toute diffusion non autorisée est passible de mort par le village.</div>
+  </div>`;
+}
+
+function mkTOC(chapters){
+  const rows=chapters.filter(c=>c.entries.length>0).map(c=>`
+    <div class="toc-row" onclick="jumpChapter(${c.id})">
+      <span class="tr-name">${esc(c.name)}</span>
+      <span class="tr-dots"></span>
+      <span class="tr-pg">${c.entries.length} fiche${c.entries.length>1?'s':''}</span>
+    </div>`).join('');
+  return`<div><div class="toc-h">TABLE DES MATIÈRES</div>${rows||'<div class="empty-lbl">Aucune entrée</div>'}</div>`;
+}
+
+function mkRanksPage(){
+  return`<div class="ct-ranks">
+    <div class="rk-title">Hiérarchie des Rangs</div>
+    ${RANKS.map(r=>`<div class="rk-row">
+      <div class="rk-dot" style="background:${r.color}">${r.n}</div>
+      <div class="rk-lbl">${r.label}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function mkChapterHeader(ch,idx){
+  return`<div class="ct-chapter">
+    <div class="cc-bg">忍</div>
+    <div class="cc-num">Chapitre ${idx}</div>
+    <hr class="cc-rule"><div class="cc-name">${esc(ch.name)}</div><hr class="cc-rule">
+    <div class="cc-count">${ch.entries.length} fiche${ch.entries.length>1?'s':''} répertoriée${ch.entries.length>1?'s':''}</div>
+  </div>`;
+}
+
+function mkEntryCard(entry, isClan){
+  const rk=rankInfo(entry.rank);
+  const portrait=getPortrait(entry.media);
+  const gallery=getGallery(entry.media, portrait);
+  const photo=portrait
+    ?`<img src="${esc(portrait.url)}" alt="${esc(entry.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"no-img\\">👤</div>'">`
+    :`<div class="no-img">${isClan?'⚔️':'👤'}</div>`;
+
+  const galleryHTML=gallery.length?`<div class="ec-gallery">${gallery.map((m,i)=>{
+    const idx=entry.media.indexOf(m);
+    if(m.type==='video'){return`<div class="ec-thumb" onclick="openLB(${JSON.stringify(entry.media).replace(/"/g,'&quot;')},${idx})"><div class="vid-ico">▶</div></div>`}
+    return`<div class="ec-thumb" onclick="openLB(${JSON.stringify(entry.media).replace(/"/g,'&quot;')},${idx})"><img src="${esc(m.url)}" loading="lazy" onerror="this.style.display='none'"></div>`;
+  }).join('')}</div>`:'';
+
+  const galleryAttr=gallery.length?`onclick="openLB(${JSON.stringify(entry.media).replace(/"/g,'&quot;')},0)"` :'';
+
+  if(isClan){
+    return`<div class="ct-card">
+      <div class="ec-stamp ${esc(entry.status)}">${esc(entry.status)}</div>
+      <div class="ec-photo" ${portrait&&gallery.length?galleryAttr:''}>${photo}
+        ${rankBadgeHTML(entry.rank)}
+        <div class="ec-clan-badge">⚔ ${esc(entry.members||'?')} mbr</div>
+      </div>
+      <div class="ec-name">${esc(entry.name)}</div>
+      <div class="ec-sub">Chef: ${esc(entry.leader||'—')} · ${esc(entry.alliance||'Indépendant')}</div>
+      <div class="ec-desc">${esc(entry.desc)}</div>
+      ${galleryHTML}
+      <div class="ec-wanted">CLAN DANGEREUX</div>
+    </div>`;
+  }
+
+  return`<div class="ct-card">
+    <div class="ec-stamp ${esc(entry.status)}">${esc(entry.status)}</div>
+    <div class="ec-photo">${photo}${rankBadgeHTML(entry.rank)}</div>
+    <div class="ec-name">${esc(entry.name)}</div>
+    <div class="ec-sub">${esc(entry.village||'Village inconnu')}</div>
+    <div class="ec-desc">${esc(entry.desc)}</div>
+    ${galleryHTML}
+    <div class="ec-bounty">⟨ ${esc(entry.bounty||'—')} ⟩</div>
+    <div class="ec-wanted">RECHERCHÉ</div>
+  </div>`;
+}
+
+function mkBlank(){return`<div class="ct-blank">— —</div>`}
+function mkBack(isClans){return`<div class="ct-back">${mkSealSvg(40,.75)}<div class="b-fin">— FIN DU REGISTRE —</div><div class="b-note">Document classifié — ${isClans?'Registre des Clans':'Bingo Book'} Bloodlines</div></div>`}
+
+// ══════════════════════════════════════════════════════════════
+//  SPREADS
+// ══════════════════════════════════════════════════════════════
+function buildSpreads(){
+  const isClans = curView==='clans';
+  const src = isClans ? data.clans : data.book;
+  spreads=[];
+  // Spread 0: cover
+  spreads.push({L:mkBlank(),R:mkCoverPage(isClans),ln:'',rn:'',chid:null});
+  // Spread 1: TOC + Ranks
+  spreads.push({L:mkTOC(src.chapters),R:mkRanksPage(),ln:'I',rn:'II',chid:null});
+  let pg=0;
+  let ci=0;
+  for(const ch of src.chapters){
+    if(!ch.entries.length)continue;
+    ci++;
+    spreads.push({L:mkBlank(),R:mkChapterHeader(ch,ci),ln:String(++pg),rn:String(++pg),chid:ch.id});
+    const e=ch.entries;
+    for(let i=0;i<e.length;i+=2){
+      spreads.push({L:mkEntryCard(e[i],isClans),R:e[i+1]?mkEntryCard(e[i+1],isClans):mkBlank(),ln:String(++pg),rn:String(++pg),chid:null});
+    }
+  }
+  spreads.push({L:mkBack(isClans),R:mkBlank(),ln:'',rn:'',chid:null});
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DISPLAY
+// ══════════════════════════════════════════════════════════════
+function renderSpread(idx){
+  idx=Math.max(0,Math.min(spreads.length-1,idx));
+  const s=spreads[idx];
+  document.getElementById('pl-c').innerHTML=s.L;
+  document.getElementById('pr-c').innerHTML=s.R;
+  document.getElementById('pl-n').textContent=s.ln;
+  document.getElementById('pr-n').textContent=s.rn;
+  document.getElementById('prev-btn').disabled=(idx===0);
+  document.getElementById('next-btn').disabled=(idx>=spreads.length-1);
+  document.getElementById('sp-ind').textContent=`${idx+1} / ${spreads.length}`;
+}
+
+function jumpChapter(id){
+  if(busy)return;
+  const idx=spreads.findIndex(s=>s.chid===id);
+  if(idx>=0){cur=idx;renderSpread(cur)}
+}
+
+function rebuild(){
+  buildSpreads();
+  renderSpread(Math.min(cur,spreads.length-1));
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE FLIP
+// ══════════════════════════════════════════════════════════════
+const fl=()=>document.getElementById('flipper');
+function goNext(){
+  if(busy||cur>=spreads.length-1)return;
+  const nxt=spreads[cur+1],prv=spreads[cur],f=fl();
+  f.className='flipper from-right';
+  document.getElementById('ff-c').innerHTML=prv.R;document.getElementById('ff-n').textContent=prv.rn;
+  document.getElementById('fb-c').innerHTML=nxt.L;document.getElementById('fb-n').textContent=nxt.ln;
+  document.getElementById('pr-c').innerHTML=nxt.R;document.getElementById('pr-n').textContent=nxt.rn;
+  f.style.transition='none';f.style.transform='rotateY(0deg)';f.style.display='block';f.offsetHeight;
+  busy=true;f.style.transition='transform .72s cubic-bezier(.645,.045,.355,1)';f.style.transform='rotateY(-180deg)';
+  setTimeout(()=>{
+    cur++;
+    document.getElementById('pl-c').innerHTML=nxt.L;document.getElementById('pl-n').textContent=nxt.ln;
+    f.style.transition='none';f.style.transform='rotateY(0deg)';f.style.display='none';
+    document.getElementById('prev-btn').disabled=(cur===0);document.getElementById('next-btn').disabled=(cur>=spreads.length-1);
+    document.getElementById('sp-ind').textContent=`${cur+1} / ${spreads.length}`;busy=false;
+  },720);
+}
+function goBack(){
+  if(busy||cur<=0)return;
+  const prv=spreads[cur-1],crt=spreads[cur],f=fl();
+  f.className='flipper from-left';
+  document.getElementById('ff-c').innerHTML=crt.L;document.getElementById('ff-n').textContent=crt.ln;
+  document.getElementById('fb-c').innerHTML=prv.R;document.getElementById('fb-n').textContent=prv.rn;
+  document.getElementById('pl-c').innerHTML=prv.L;document.getElementById('pl-n').textContent=prv.ln;
+  f.style.transition='none';f.style.transform='rotateY(0deg)';f.style.display='block';f.offsetHeight;
+  busy=true;f.style.transition='transform .72s cubic-bezier(.645,.045,.355,1)';f.style.transform='rotateY(180deg)';
+  setTimeout(()=>{
+    cur--;
+    document.getElementById('pr-c').innerHTML=prv.R;document.getElementById('pr-n').textContent=prv.rn;
+    f.style.transition='none';f.style.transform='rotateY(0deg)';f.style.display='none';
+    document.getElementById('prev-btn').disabled=(cur===0);document.getElementById('next-btn').disabled=(cur>=spreads.length-1);
+    document.getElementById('sp-ind').textContent=`${cur+1} / ${spreads.length}`;busy=false;
+  },720);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  VIEWS
+// ══════════════════════════════════════════════════════════════
+function openBook(){
+  const land=document.getElementById('landing');
+  land.style.transition='opacity .75s';land.style.opacity='0';
+  setTimeout(()=>{
+    land.style.display='none';
+    const sc=document.getElementById('scene');
+    sc.style.display='flex';sc.style.opacity='0';sc.style.transition='opacity .65s';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{sc.style.opacity='1'}));
+    cur=0;buildSpreads();renderSpread(0);
+  },750);
+}
+
+function switchView(v){
+  curView=v;
+  ['book','clans','demandes'].forEach(x=>{
+    document.getElementById('vt-'+x).classList.toggle('on',x===v);
+  });
+  const bookEl=document.getElementById('book-wrap-el');
+  const demEl=document.getElementById('demandes-view');
+  if(v==='demandes'){
+    bookEl.style.display='none';demEl.style.display='';
+    renderPublicRequests();
+  }else{
+    bookEl.style.display='';demEl.style.display='none';
+    cur=0;buildSpreads();renderSpread(0);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  LIGHTBOX
+// ══════════════════════════════════════════════════════════════
+function openLB(mediaArr, startIdx){
+  if(typeof mediaArr==='string')try{mediaArr=JSON.parse(mediaArr)}catch(e){return}
+  lbItems=mediaArr;lbIdx=startIdx||0;
+  renderLB();
+  document.getElementById('lightbox').classList.add('open');
+}
+function renderLB(){
+  const m=lbItems[lbIdx];if(!m)return;
+  let html='';
+  if(m.type==='video'){
+    const embed=ytEmbed(m.url);
+    if(embed)html=`<iframe class="lb-video" src="${embed}" allowfullscreen frameborder="0"></iframe>`;
+    else html=`<video class="lb-video" src="${esc(m.url)}" controls></video>`;
+  }else{
+    html=`<img class="lb-img" src="${esc(m.url)}" alt="${esc(m.caption||'')}">`;
+  }
+  document.getElementById('lb-content').innerHTML=html;
+  document.getElementById('lb-cap').textContent=m.caption||'';
+  document.getElementById('lb-prev').style.display=lbIdx>0?'':'none';
+  document.getElementById('lb-next').style.display=lbIdx<lbItems.length-1?'':'none';
+}
+function lbNav(d){lbIdx=Math.max(0,Math.min(lbItems.length-1,lbIdx+d));renderLB()}
+function closeLB(){document.getElementById('lightbox').classList.remove('open');document.getElementById('lb-content').innerHTML=''}
+
+// ══════════════════════════════════════════════════════════════
+//  DEMANDES (public)
+// ══════════════════════════════════════════════════════════════
+function renderPublicRequests(){
+  const el=document.getElementById('pub-req-list');
+  if(!data.requests||!data.requests.length){el.innerHTML='<div style="color:rgba(50,20,0,.35);font-size:.75rem;text-align:center;padding:10px">Aucune demande en cours</div>';return}
+  el.innerHTML=data.requests.map(r=>`<div class="req-item">
+    <strong>${esc(r.target)}</strong> <span class="req-status ${r.status}">${r.status}</span><br>
+    <span style="font-size:.68rem;color:rgba(50,20,0,.5)">Par ${esc(r.by)} · ${esc(r.date)} · ${r.type==='clan'?'Clan':'Ennemi'}</span><br>
+    <span style="font-size:.7rem">${esc(r.reason||'').substring(0,120)}${(r.reason||'').length>120?'…':''}</span>
+  </div>`).join('');
+}
+
+function submitDemande(){
+  const target=document.getElementById('dq-target').value.trim();
+  if(!target){toast('Nom du criminel requis');return}
+  const rankN=parseInt(document.getElementById('dq-rank').value)||1;
+  const req={
+    id:data.nid++,target,rank:rankN,type:document.getElementById('dq-type').value,
+    reason:document.getElementById('dq-reason').value.trim(),
+    proof:document.getElementById('dq-proof').value.trim(),
+    by:document.getElementById('dq-by').value.trim()||'Anonyme',
+    date:new Date().toLocaleDateString('fr-FR'),status:'PENDING'
+  };
+  if(!data.requests)data.requests=[];
+  data.requests.push(req);
+  saveData();
+  ['dq-target','dq-reason','dq-proof','dq-by'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('dq-rank').value='';
+  renderPublicRequests();
+  toast('Demande soumise — merci !');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════════════
+function showPwd(){document.getElementById('pwd-modal').classList.add('open');setTimeout(()=>document.getElementById('pwd-in').focus(),80)}
+function closePwd(){document.getElementById('pwd-modal').classList.remove('open');document.getElementById('pwd-in').value='';document.getElementById('pwd-err').style.display='none'}
+function checkPwd(){
+  if(document.getElementById('pwd-in').value===PWD){closePwd();openAdmin()}
+  else{document.getElementById('pwd-err').style.display='block';document.getElementById('pwd-in').value='';document.getElementById('pwd-in').focus()}
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ADMIN PANEL
+// ══════════════════════════════════════════════════════════════
+function openAdmin(){
+  document.getElementById('admin-overlay').classList.add('open');
+  populateRankSelects();
+  renderEChSel();renderEList();
+  renderClChSel();renderClList();
+  renderChList();
+  renderAdmRequests();
+  // Load GH config into fields
+  document.getElementById('gh-user').value=ghCfg.user||'';
+  document.getElementById('gh-repo').value=ghCfg.repo||'';
+  document.getElementById('gh-branch').value=ghCfg.branch||'main';
+  document.getElementById('gh-file').value=ghCfg.file||'bingo-data.json';
+  document.getElementById('gh-token').value=ghCfg.token||'';
+}
+function closeAdmin(){document.getElementById('admin-overlay').classList.remove('open')}
+
+function switchTab(t){
+  ['e','cl','ch','dq','gh'].forEach(x=>{
+    document.getElementById('tab-'+x).style.display=x===t?'':'none';
+    document.getElementById('tb-'+x).classList.toggle('on',x===t);
+  });
+}
+
+// ── MEDIA ROWS ─────────────────────────────────────────────
+function addMediaRow(prefix, item){
+  const list=document.getElementById(prefix+'-media-list');
+  const idx=list.children.length;
+  const type=item?item.type:'image';
+  const url=item?item.url:'';
+  const cap=item?item.caption:'';
+  const port=item?item.portrait:false;
+  const row=document.createElement('div');
+  row.className='media-row';
+  row.dataset.idx=idx;
+  row.innerHTML=`
+    <select class="media-type" onchange="updateMediaRow(this)">
+      <option value="image" ${type==='image'?'selected':''}>🖼 Image</option>
+      <option value="video" ${type==='video'?'selected':''}>🎬 Vidéo</option>
+    </select>
+    <input class="media-url ap-in" style="margin-bottom:0" type="text" placeholder="URL…" value="${esc(url)}">
+    <input class="media-cap ap-in" style="margin-bottom:0;width:100px" type="text" placeholder="Légende" value="${esc(cap)}">
+    <label style="display:flex;align-items:center;gap:3px;font-family:Cinzel,serif;font-size:.52rem;color:rgba(200,150,12,.55);white-space:nowrap">
+      <input type="checkbox" class="media-portrait-chk" ${port?'checked':''} ${type==='video'?'disabled':''}>Portrait
+    </label>
+    <button class="btn btn-s" onclick="moveMedia(this,-1)">↑</button>
+    <button class="btn btn-s" onclick="moveMedia(this,1)">↓</button>
+    <button class="btn btn-d" onclick="this.closest('.media-row').remove()">✕</button>`;
+  list.appendChild(row);
+}
+function moveMedia(btn,dir){
+  const row=btn.closest('.media-row');
+  const list=row.parentElement;
+  const rows=Array.from(list.children);
+  const i=rows.indexOf(row);
+  const ni=i+dir;
+  if(ni<0||ni>=rows.length)return;
+  if(dir===-1)list.insertBefore(row,rows[ni]);else list.insertBefore(rows[ni],row);
+}
+function updateMediaRow(sel){
+  const row=sel.closest('.media-row');
+  const portChk=row.querySelector('.media-portrait-chk');
+  portChk.disabled=(sel.value==='video');
+  if(sel.value==='video')portChk.checked=false;
+}
+function collectMedia(prefix){
+  return Array.from(document.getElementById(prefix+'-media-list').children).map(row=>({
+    type:row.querySelector('.media-type').value,
+    url:row.querySelector('.media-url').value.trim(),
+    caption:row.querySelector('.media-cap').value.trim(),
+    portrait:row.querySelector('.media-portrait-chk').checked
+  })).filter(m=>m.url);
+}
+function loadMediaRows(prefix, mediaArr){
+  const list=document.getElementById(prefix+'-media-list');
+  list.innerHTML='';
+  if(mediaArr&&mediaArr.length)mediaArr.forEach(m=>addMediaRow(prefix,m));
+}
+
+// ── ENEMY CHAPTER SELECTOR ─────────────────────────────────
+function renderEChSel(){
+  const el=document.getElementById('e-ch-sel');
+  const chs=data.book.chapters;
+  if(!chs.length){el.innerHTML='<div style="color:rgba(200,150,12,.22);font-size:.68rem">Créez un chapitre d\'abord</div>';selChE=null;renderEList();return}
+  if(!selChE||!chs.find(c=>c.id===selChE))selChE=chs[0].id;
+  el.innerHTML=chs.map(c=>`<button class="ch-sel${c.id===selChE?' on':''}" onclick="pickECh(${c.id})">${esc(c.name)}</button>`).join('');
+  renderEList();
+}
+function pickECh(id){selChE=id;renderEChSel()}
+function renderEList(){
+  const el=document.getElementById('elist');
+  if(!selChE){el.innerHTML='';return}
+  const ch=data.book.chapters.find(c=>c.id===selChE);
+  if(!ch||!ch.entries.length){el.innerHTML='<div class="empty-lbl">Aucun ennemi</div>';return}
+  const rk=rankInfo;
+  el.innerHTML=ch.entries.map(e=>`<div class="e-item">
+    <span class="e-nm">${esc(e.name)}</span>
+    <span class="rtag" style="color:${rk(e.rank).color};border-color:${rk(e.rank).color}">${rk(e.rank).n}</span>
+    <button class="btn btn-s" onclick="editEnemy(${e.id})">ÉDITER</button>
+    <button class="btn btn-d" onclick="delEnemy(${e.id})">SUPPR.</button>
+  </div>`).join('');
+}
+function saveEnemy(){
+  if(!selChE){toast('Sélectionnez un chapitre');return}
+  const nm=document.getElementById('ef-nm').value.trim();if(!nm){toast('Nom requis');return}
+  const eid=document.getElementById('ef-id').value;
+  const d={name:nm,rank:+document.getElementById('ef-rk').value||1,status:document.getElementById('ef-st').value,village:document.getElementById('ef-vl').value.trim(),bounty:document.getElementById('ef-bn').value.trim(),desc:document.getElementById('ef-dc').value.trim(),media:collectMedia('ef')};
+  if(eid){for(const c of data.book.chapters){const e=c.entries.find(x=>x.id===+eid);if(e){Object.assign(e,d);break}}}
+  else{const ch=data.book.chapters.find(c=>c.id===selChE);if(ch)ch.entries.push({id:data.nid++,...d})}
+  cancelEnemy();saveData();renderEList();toast('Ennemi enregistré');
+}
+function editEnemy(id){
+  for(const c of data.book.chapters){const e=c.entries.find(x=>x.id===id);if(e){
+    selChE=c.id;
+    document.getElementById('ef-id').value=id;
+    document.getElementById('ef-nm').value=e.name;
+    document.getElementById('ef-rk').value=e.rank;
+    document.getElementById('ef-st').value=e.status;
+    document.getElementById('ef-vl').value=e.village;
+    document.getElementById('ef-bn').value=e.bounty;
+    document.getElementById('ef-dc').value=e.desc;
+    document.getElementById('ef-ttl').textContent="MODIFIER L'ENNEMI";
+    loadMediaRows('ef',e.media);
+    renderEChSel();break;
+  }}
+}
+function delEnemy(id){if(!confirm('Supprimer ?'))return;for(const c of data.book.chapters)c.entries=c.entries.filter(e=>e.id!==id);saveData();renderEList();toast('Supprimé')}
+function cancelEnemy(){['ef-id','ef-nm','ef-vl','ef-bn','ef-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('ef-rk').value=RANKS[0].n;document.getElementById('ef-st').value='ACTIF';document.getElementById('ef-ttl').textContent='AJOUTER UN ENNEMI';document.getElementById('ef-media-list').innerHTML=''}
+
+// ── CLAN CHAPTER SELECTOR ──────────────────────────────────
+function renderClChSel(){
+  const el=document.getElementById('cl-ch-sel');
+  const chs=data.clans.chapters;
+  if(!chs.length){el.innerHTML='<div style="color:rgba(200,150,12,.22);font-size:.68rem">Créez un chapitre d\'abord</div>';selChCl=null;renderClList();return}
+  if(!selChCl||!chs.find(c=>c.id===selChCl))selChCl=chs[0].id;
+  el.innerHTML=chs.map(c=>`<button class="ch-sel${c.id===selChCl?' on':''}" onclick="pickClCh(${c.id})">${esc(c.name)}</button>`).join('');
+  renderClList();
+}
+function pickClCh(id){selChCl=id;renderClChSel()}
+function renderClList(){
+  const el=document.getElementById('cllist');
+  if(!selChCl){el.innerHTML='';return}
+  const ch=data.clans.chapters.find(c=>c.id===selChCl);
+  if(!ch||!ch.entries.length){el.innerHTML='<div class="empty-lbl">Aucun clan</div>';return}
+  const rk=rankInfo;
+  el.innerHTML=ch.entries.map(e=>`<div class="e-item">
+    <span class="e-nm">${esc(e.name)}</span>
+    <span class="rtag" style="color:${rk(e.rank).color};border-color:${rk(e.rank).color}">${rk(e.rank).n}</span>
+    <button class="btn btn-s" onclick="editClan(${e.id})">ÉDITER</button>
+    <button class="btn btn-d" onclick="delClan(${e.id})">SUPPR.</button>
+  </div>`).join('');
+}
+function saveClan(){
+  if(!selChCl){toast('Sélectionnez un chapitre');return}
+  const nm=document.getElementById('clf-nm').value.trim();if(!nm){toast('Nom requis');return}
+  const eid=document.getElementById('clf-id').value;
+  const d={name:nm,rank:+document.getElementById('clf-rk').value||1,status:document.getElementById('clf-st').value,alliance:document.getElementById('clf-al').value.trim(),leader:document.getElementById('clf-ld').value.trim(),members:document.getElementById('clf-mb').value.trim(),desc:document.getElementById('clf-dc').value.trim(),media:collectMedia('clf')};
+  if(eid){for(const c of data.clans.chapters){const e=c.entries.find(x=>x.id===+eid);if(e){Object.assign(e,d);break}}}
+  else{const ch=data.clans.chapters.find(c=>c.id===selChCl);if(ch)ch.entries.push({id:data.nid++,...d})}
+  cancelClan();saveData();renderClList();toast('Clan enregistré');
+}
+function editClan(id){
+  for(const c of data.clans.chapters){const e=c.entries.find(x=>x.id===id);if(e){
+    selChCl=c.id;
+    document.getElementById('clf-id').value=id;
+    document.getElementById('clf-nm').value=e.name;
+    document.getElementById('clf-rk').value=e.rank;
+    document.getElementById('clf-st').value=e.status;
+    document.getElementById('clf-al').value=e.alliance||'';
+    document.getElementById('clf-ld').value=e.leader||'';
+    document.getElementById('clf-mb').value=e.members||'';
+    document.getElementById('clf-dc').value=e.desc;
+    document.getElementById('clf-ttl').textContent="MODIFIER LE CLAN";
+    loadMediaRows('clf',e.media);
+    renderClChSel();break;
+  }}
+}
+function delClan(id){if(!confirm('Supprimer ?'))return;for(const c of data.clans.chapters)c.entries=c.entries.filter(e=>e.id!==id);saveData();renderClList();toast('Supprimé')}
+function cancelClan(){['clf-id','clf-nm','clf-al','clf-ld','clf-mb','clf-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('clf-rk').value=RANKS[0].n;document.getElementById('clf-st').value='ACTIF';document.getElementById('clf-ttl').textContent='AJOUTER UN CLAN';document.getElementById('clf-media-list').innerHTML=''}
+
+// ── CHAPTERS ───────────────────────────────────────────────
+function switchChTab(t){
+  curChTab=t;
+  document.getElementById('chs-book').classList.toggle('on',t==='book');
+  document.getElementById('chs-clans').classList.toggle('on',t==='clans');
+  renderChList();
+}
+function renderChList(){
+  const src=curChTab==='book'?data.book.chapters:data.clans.chapters;
+  const el=document.getElementById('ch-list');
+  if(!src.length){el.innerHTML='<div class="empty-lbl">Aucun chapitre</div>';return}
+  el.innerHTML=src.map(c=>`<div class="ch-item">
+    <span class="e-nm">${esc(c.name)}</span>
+    <button class="btn btn-s" onclick="editChap(${c.id})">ÉDITER</button>
+    <button class="btn btn-d" onclick="delChap(${c.id})">SUPPR.</button>
+  </div>`).join('');
+}
+function saveChap(){
+  const nm=document.getElementById('cf-nm').value.trim();if(!nm)return;
+  const id=document.getElementById('cf-id').value;
+  const src=curChTab==='book'?data.book.chapters:data.clans.chapters;
+  if(id){const c=src.find(x=>x.id===+id);if(c)c.name=nm}
+  else src.push({id:data.nid++,name:nm,entries:[]});
+  cancelChap();saveData();renderChList();renderEChSel();renderClChSel();toast('Chapitre enregistré');
+}
+function editChap(id){
+  const src=curChTab==='book'?data.book.chapters:data.clans.chapters;
+  const c=src.find(x=>x.id===id);if(!c)return;
+  document.getElementById('cf-id').value=id;
+  document.getElementById('cf-nm').value=c.name;
+  document.getElementById('cf-ttl').textContent='MODIFIER LE CHAPITRE';
+}
+function delChap(id){
+  if(!confirm('Supprimer ce chapitre et toutes ses fiches ?'))return;
+  const key=curChTab==='book'?'book':'clans';
+  data[key].chapters=data[key].chapters.filter(c=>c.id!==id);
+  saveData();renderChList();renderEChSel();renderClChSel();toast('Chapitre supprimé');
+}
+function cancelChap(){document.getElementById('cf-id').value='';document.getElementById('cf-nm').value='';document.getElementById('cf-ttl').textContent='AJOUTER UN CHAPITRE'}
+
+// ── DEMANDES (admin) ───────────────────────────────────────
+function renderAdmRequests(){
+  const el=document.getElementById('adm-req-list');
+  if(!data.requests||!data.requests.length){el.innerHTML='<div class="empty-lbl">Aucune demande en attente</div>';return}
+  el.innerHTML=data.requests.map(r=>`<div class="req-adm-item" style="flex-wrap:wrap;gap:6px">
+    <div style="flex:1;min-width:200px">
+      <strong style="font-family:Cinzel,serif;color:#e8d5a0;font-size:.8rem">${esc(r.target)}</strong>
+      <span class="req-status ${r.status}">${r.status}</span><br>
+      <span style="font-size:.65rem;color:rgba(200,150,12,.5)">Rang ${r.rank} · ${r.type==='clan'?'Clan':'Ennemi'} · Par ${esc(r.by)} · ${esc(r.date)}</span><br>
+      <span style="font-size:.7rem;color:rgba(200,150,12,.7)">${esc((r.reason||'').substring(0,100))}${(r.reason||'').length>100?'…':''}</span>
+      ${r.proof?`<br><a href="${esc(r.proof)}" target="_blank" style="font-size:.65rem;color:rgba(200,150,12,.6)">🔗 Preuve</a>`:''}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <button class="btn btn-green" onclick="approveRequest(${r.id})">✓ APPROUVER</button>
+      <button class="btn btn-d" onclick="rejectRequest(${r.id})">✗ REJETER</button>
+    </div>
+  </div>`).join('');
+}
+function approveRequest(id){
+  const req=data.requests.find(r=>r.id===id);if(!req)return;
+  const targetSrc=req.type==='clan'?data.clans:data.book;
+  if(!targetSrc.chapters.length){toast('Créez d\'abord un chapitre');return}
+  const ch=targetSrc.chapters[0];
+  const entry=req.type==='clan'
+    ?{id:data.nid++,name:req.target,rank:req.rank,status:'ACTIF',alliance:'Inconnu',leader:'Inconnu',members:'?',desc:req.reason||'',media:[]}
+    :{id:data.nid++,name:req.target,rank:req.rank,status:'ACTIF',village:'Inconnu',bounty:'?',desc:req.reason||'',media:[]};
+  ch.entries.push(entry);
+  req.status='APPROUVE';
+  saveData();renderAdmRequests();toast('Approuvé et ajouté au chapitre 1');
+}
+function rejectRequest(id){
+  if(!confirm('Rejeter cette demande ?'))return;
+  data.requests=data.requests.filter(r=>r.id!==id);
+  saveData();renderAdmRequests();toast('Demande rejetée');
+}
+
+// ── GITHUB SYNC ─────────────────────────────────────────────
+function ghSaveConfig(){
+  ghCfg={user:document.getElementById('gh-user').value.trim(),repo:document.getElementById('gh-repo').value.trim(),branch:document.getElementById('gh-branch').value.trim()||'main',file:document.getElementById('gh-file').value.trim()||'bingo-data.json',token:document.getElementById('gh-token').value.trim()};
+  saveGhCfg();toast('Configuration sauvegardée');
+}
+function ghStatus(msg,ok){const el=document.getElementById('gh-status');el.className='gh-status '+(ok?'gh-ok':'gh-err');el.textContent=msg}
+
+async function ghPush(){
+  ghSaveConfig();
+  if(!ghCfg.user||!ghCfg.repo||!ghCfg.token){ghStatus('⚠ Renseignez user, repo et token',false);return}
+  ghStatus('Envoi en cours…',true);
+  try{
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+    const url=`https://api.github.com/repos/${ghCfg.user}/${ghCfg.repo}/contents/${ghCfg.file}`;
+    const headers={'Authorization':`token ${ghCfg.token}`,'Content-Type':'application/json'};
+    // Get current SHA
+    let sha=undefined;
+    try{const r=await fetch(url,{headers});if(r.ok){const j=await r.json();sha=j.sha}}catch(e){}
+    const body={message:'Update Bingo Book data',content,...(sha&&{sha})};
+    const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
+    if(res.ok){ghStatus('✓ Données envoyées avec succès !',true);toast('Synchronisé avec GitHub')}
+    else{const j=await res.json();ghStatus('✗ Erreur: '+( j.message||res.status),false)}
+  }catch(e){ghStatus('✗ Erreur réseau: '+e.message,false)}
+}
+
+async function ghPull(){
+  ghSaveConfig();
+  if(!ghCfg.user||!ghCfg.repo){ghStatus('⚠ Renseignez user et repo',false);return}
+  ghStatus('Import en cours…',true);
+  try{
+    const url=`https://raw.githubusercontent.com/${ghCfg.user}/${ghCfg.repo}/${ghCfg.branch}/${ghCfg.file}?t=${Date.now()}`;
+    const res=await fetch(url);
+    if(!res.ok){ghStatus('✗ Fichier introuvable ('+res.status+')',false);return}
+    const j=await res.json();
+    if(j.book&&j.clans){data=j;saveData();ghStatus('✓ Données importées !',true);toast('Import réussi')}
+    else ghStatus('✗ Format de données invalide',false);
+  }catch(e){ghStatus('✗ Erreur: '+e.message,false)}
+}
+
+// ── TOAST ──────────────────────────────────────────────────
+let toastT;
+function toast(msg){clearTimeout(toastT);const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');toastT=setTimeout(()=>t.classList.remove('show'),2400)}
+
+// ── KEYBOARD & SWIPE ──────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('input,textarea,select'))return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')goNext();
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')goBack();
+  if(e.key==='Escape'){closeAdmin();closePwd();closeLB()}
+});
+let tx=0;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>55&&curView!=='demandes'){d>0?goNext():goBack()}});
+
+// ── INIT ──────────────────────────────────────────────────
+loadData();
+populateRankSelects();
+buildSpreads();
+</script>
+</body>
+</html>
