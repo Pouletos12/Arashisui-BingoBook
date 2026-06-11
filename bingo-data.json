@@ -50,6 +50,23 @@
             "bounty": "30,000,000 ryō",
             "desc": "Génie Uchiha. Amaterasu, Tsukuyomi, Susano'o complet. A massacré son clan. Ex-Akatsuki. NE PAS APPROCHER.",
             "media": []
+          },
+          {
+            "id": 2000,
+            "name": "okokoko",
+            "rank": 9,
+            "status": "ACTIF",
+            "village": "",
+            "bounty": "2000",
+            "desc": "ghj;tgujk",
+            "media": [
+              {
+                "type": "image",
+                "url": "https://media.discordapp.net/attachments/848620188203089951/1493025904211787796/image.png?ex=6a2be97a&is=6a2a97fa&hm=4fa24efcff7a3a84d4aab9e4193925f42a56e72e499057917bb49c346f567f8c&=&format=webp&quality=lossless",
+                "caption": "okokoko",
+                "portrait": true
+              }
+            ]
           }
         ]
       }
@@ -77,5 +94,5 @@
     ]
   },
   "requests": [],
-  "nid": 2000
+  "nid": 2001
 }
