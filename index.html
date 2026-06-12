@@ -336,7 +336,7 @@ select.ap-in option{background:#0a0a16}
           </div>
         </div>
         <label class="dem-lbl">TYPE DE SIGNALEMENT</label>
-        <select class="dem-in" id="dq-type">
+        <select class="dem-in" id="dq-type" onchange="updateDemandeRankOptions()">
           <option value="ennemi">Ennemi individuel (Bingo Book)</option>
           <option value="clan">Clan dangereux (Bingo Clans)</option>
         </select>
@@ -395,6 +395,7 @@ select.ap-in option{background:#0a0a16}
       <button class="tab on" id="tb-e"  onclick="switchTab('e')">ENNEMIS</button>
       <button class="tab"    id="tb-cl" onclick="switchTab('cl')">CLANS</button>
       <button class="tab"    id="tb-ch" onclick="switchTab('ch')">CHAPITRES</button>
+      <button class="tab"    id="tb-rk" onclick="switchTab('rk')">RANGS</button>
       <button class="tab"    id="tb-dq" onclick="switchTab('dq')">DEMANDES</button>
       <button class="tab"    id="tb-gh" onclick="switchTab('gh')">GITHUB</button>
     </div>
@@ -469,6 +470,31 @@ select.ap-in option{background:#0a0a16}
       </div>
     </div>
 
+    <!-- TAB: RANGS -->
+    <div id="tab-rk" style="display:none">
+      <div style="display:flex;gap:4px;margin-bottom:14px">
+        <button class="ch-sel on" id="rks-book" onclick="switchRkTab('book')">RANGS ENNEMIS</button>
+        <button class="ch-sel" id="rks-clans" onclick="switchRkTab('clans')">RANGS CLANS</button>
+      </div>
+      <div id="rk-list"></div>
+      <div class="ap-hr"></div>
+      <div class="ap-sec" id="rkf-ttl">AJOUTER UN RANG</div>
+      <input type="hidden" id="rkf-id">
+      <div class="ap-3">
+        <div><label class="ap-lbl">NUMÉRO</label><input class="ap-in" id="rkf-n" type="number" min="0" placeholder="Ex: 15"></div>
+        <div style="grid-column:span 2"><label class="ap-lbl">NOM DU RANG</label><input class="ap-in" id="rkf-lbl" type="text" placeholder="Ex: Légende Vivante"></div>
+      </div>
+      <label class="ap-lbl">COULEUR</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <input id="rkf-color" type="color" value="#8b0000" style="width:48px;height:34px;border:1px solid rgba(200,150,12,.2);background:transparent;cursor:pointer">
+        <input class="ap-in" id="rkf-color-txt" type="text" placeholder="#8b0000" style="margin-bottom:0" oninput="syncColorTxt(this.value)">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-g" onclick="cancelRank()">ANNULER</button>
+        <button class="btn btn-p" onclick="saveRank()">ENREGISTRER</button>
+      </div>
+    </div>
+
     <!-- TAB: DEMANDES -->
     <div id="tab-dq" style="display:none">
       <div id="adm-req-list"></div>
@@ -491,6 +517,12 @@ select.ap-in option{background:#0a0a16}
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap">
         <button class="btn btn-g" onclick="ghTestConnection()">TESTER LA CONNEXION</button>
         <button class="btn btn-green" onclick="ghSaveToken()">SAUVEGARDER LE TOKEN</button>
+      </div>
+      <div class="gh-note" style="margin-top:14px">
+        <strong>🤖 Bot Discord (optionnel) :</strong><br>
+        Un bot Discord peut lire les demandes postées sur votre serveur (via un salon ou un formulaire/modal) et les ajouter automatiquement dans <code>data.requests</code> du fichier <code>bingo-data.json</code> sur GitHub, en utilisant la même API GitHub (PUT contents) avec son propre token.<br><br>
+        Une fois ajoutées par le bot, les demandes apparaissent automatiquement ici (onglet DEMANDES, public + admin) au prochain chargement / actualisation — aucune autre configuration nécessaire côté site.<br><br>
+        <span style="opacity:.7">Format attendu par entrée : {id, target, rank, type:"ennemi"|"clan", reason, proof, by, date, status:"PENDING"}</span>
       </div>
     </div>
 
@@ -524,7 +556,7 @@ const GH_API_URL    = ()=> GH_CONFIGURED()
   ? `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`
   : null;
 
-const RANKS = [
+const DEFAULT_RANKS_BOOK = [
   {n:1,  label:'Genin',                color:'#3a6e3a'},
   {n:2,  label:'Genin Expérimenté',    color:'#2a5e2a'},
   {n:3,  label:'Chūnin',               color:'#5e5e00'},
@@ -541,12 +573,27 @@ const RANKS = [
   {n:14, label:'Légende BingoBook',    color:'#8b0000'},
 ];
 
-function rankInfo(n){return RANKS.find(r=>r.n===+n)||RANKS[0]}
+const DEFAULT_RANKS_CLANS = [
+  {n:1,  label:'Clan Mineur',          color:'#3a6e3a'},
+  {n:2,  label:'Clan Établi',          color:'#2a5e2a'},
+  {n:3,  label:'Clan Influent',        color:'#5e5e00'},
+  {n:4,  label:'Clan Renégat',         color:'#6e4800'},
+  {n:5,  label:'Clan Majeur',          color:'#003878'},
+  {n:6,  label:"Clan d'Élite",         color:'#3a0068'},
+  {n:7,  label:'Organisation S-Rank',  color:'#8b0000'},
+  {n:8,  label:'Menace Légendaire',    color:'#450045'},
+];
+
+// Rangs courants (depuis data.ranksBook / data.ranksClans une fois chargés)
+function ranksFor(isClan){return isClan?(data.ranksClans||DEFAULT_RANKS_CLANS):(data.ranksBook||DEFAULT_RANKS_BOOK)}
+function rankInfo(n,isClan){const list=ranksFor(isClan);return list.find(r=>r.n===+n)||list[0]||{n:0,label:'?',color:'#666'}}
 
 // ══════════════════════════════════════════════════════════════
 //  DEFAULT DATA
 // ══════════════════════════════════════════════════════════════
 const DEFAULT = {
+  ranksBook: JSON.parse(JSON.stringify(DEFAULT_RANKS_BOOK)),
+  ranksClans: JSON.parse(JSON.stringify(DEFAULT_RANKS_CLANS)),
   book:{chapters:[
     {id:1,name:'Genin & Chunin — Criminels Débutants',entries:[
       {id:101,name:'Mizuki',village:'Konohagakure',rank:3,status:'NEUTRALISE',bounty:'1,000,000 ryō',desc:"Traître de Konoha. Voleur du Parchemin des Sceaux. Se transforme en tigre géant sous malédiction.",media:[]},
@@ -588,6 +635,7 @@ async function loadData(){
   // 1. Charge localStorage (affichage instantané)
   try{const s=localStorage.getItem(SK);if(s)data=JSON.parse(s)}catch(e){}
   try{const g=localStorage.getItem(GK);if(g)ghCfg=JSON.parse(g)}catch(e){}
+  ensureRanks();
 
   // 2. Si GitHub configuré → fetch en arrière-plan, sans token (repo public)
   if(GH_CONFIGURED()){
@@ -598,12 +646,19 @@ async function loadData(){
         const j=await res.json();
         if(j&&j.book&&j.clans){
           data=j;
+          ensureRanks();
           try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
           setSyncBadge('✓ À jour','ok',2500);
         }else{setSyncBadge('⚠ Données invalides','err',3000)}
       }else{setSyncBadge('⚠ GitHub injoignable','err',3000)}
     }catch(e){setSyncBadge('⚠ Hors ligne','err',3000)}
   }
+}
+
+// Ajoute les listes de rangs par défaut si absentes (compat anciennes données)
+function ensureRanks(){
+  if(!data.ranksBook||!data.ranksBook.length)data.ranksBook=JSON.parse(JSON.stringify(DEFAULT_RANKS_BOOK));
+  if(!data.ranksClans||!data.ranksClans.length)data.ranksClans=JSON.parse(JSON.stringify(DEFAULT_RANKS_CLANS));
 }
 
 function saveData(){
@@ -629,18 +684,27 @@ function ytEmbed(url){const m=url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
 function getPortrait(media){if(!media||!media.length)return null;const p=media.find(m=>m.portrait&&m.type==='image');if(p)return p;return media.find(m=>m.type==='image')||null}
 function getGallery(media,portItem){if(!media)return[];return media.filter(m=>m!==portItem)}
 
-function rankBadgeHTML(rank){
-  const r=rankInfo(rank);
+function rankBadgeHTML(rank,isClan){
+  const r=rankInfo(rank,isClan);
   return`<div class="ec-rank-badge" style="background:${r.color}" title="${esc(r.label)}">${esc(r.n)}</div>`;
 }
 
-// populate rank selects
+// populate rank selects (ennemis = ranksBook, clans = ranksClans)
 function populateRankSelects(){
-  const opts=RANKS.map(r=>`<option value="${r.n}">${r.n} — ${r.label}</option>`).join('');
-  ['ef-rk','clf-rk'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts});
-  // Demandes dropdown
+  const optsBook=ranksFor(false).map(r=>`<option value="${r.n}">${r.n} — ${r.label}</option>`).join('');
+  const optsClans=ranksFor(true).map(r=>`<option value="${r.n}">${r.n} — ${r.label}</option>`).join('');
+  const efrk=document.getElementById('ef-rk');if(efrk)efrk.innerHTML=optsBook;
+  const clfrk=document.getElementById('clf-rk');if(clfrk)clfrk.innerHTML=optsClans;
+  // Demandes dropdown: dépend du type sélectionné
+  updateDemandeRankOptions();
+}
+function updateDemandeRankOptions(){
   const dq=document.getElementById('dq-rank');
-  if(dq)dq.innerHTML=`<option value="">— Sélectionner —</option>`+opts;
+  const typeEl=document.getElementById('dq-type');
+  if(!dq||!typeEl)return;
+  const isClan=typeEl.value==='clan';
+  const opts=ranksFor(isClan).map(r=>`<option value="${r.n}">${r.n} — ${r.label}</option>`).join('');
+  dq.innerHTML=`<option value="">— Sélectionner —</option>`+opts;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -666,10 +730,10 @@ function mkTOC(chapters){
   return`<div><div class="toc-h">TABLE DES MATIÈRES</div>${rows||'<div class="empty-lbl">Aucune entrée</div>'}</div>`;
 }
 
-function mkRanksPage(){
+function mkRanksPage(isClans){
   return`<div class="ct-ranks">
     <div class="rk-title">Hiérarchie des Rangs</div>
-    ${RANKS.map(r=>`<div class="rk-row">
+    ${ranksFor(isClans).map(r=>`<div class="rk-row">
       <div class="rk-dot" style="background:${r.color}">${r.n}</div>
       <div class="rk-lbl">${r.label}</div>
     </div>`).join('')}
@@ -686,7 +750,7 @@ function mkChapterHeader(ch,idx){
 }
 
 function mkEntryCard(entry, isClan){
-  const rk=rankInfo(entry.rank);
+  const rk=rankInfo(entry.rank,isClan);
   const portrait=getPortrait(entry.media);
   const gallery=getGallery(entry.media, portrait);
   const photo=portrait
@@ -705,7 +769,7 @@ function mkEntryCard(entry, isClan){
     return`<div class="ct-card">
       <div class="ec-stamp ${esc(entry.status)}">${esc(entry.status)}</div>
       <div class="ec-photo" ${portrait&&gallery.length?galleryAttr:''}>${photo}
-        ${rankBadgeHTML(entry.rank)}
+        ${rankBadgeHTML(entry.rank,true)}
         <div class="ec-clan-badge">⚔ ${esc(entry.members||'?')} mbr</div>
       </div>
       <div class="ec-name">${esc(entry.name)}</div>
@@ -718,7 +782,7 @@ function mkEntryCard(entry, isClan){
 
   return`<div class="ct-card">
     <div class="ec-stamp ${esc(entry.status)}">${esc(entry.status)}</div>
-    <div class="ec-photo">${photo}${rankBadgeHTML(entry.rank)}</div>
+    <div class="ec-photo">${photo}${rankBadgeHTML(entry.rank,false)}</div>
     <div class="ec-name">${esc(entry.name)}</div>
     <div class="ec-sub">${esc(entry.village||'Village inconnu')}</div>
     <div class="ec-desc">${esc(entry.desc)}</div>
@@ -741,7 +805,7 @@ function buildSpreads(){
   // Spread 0: cover
   spreads.push({L:mkBlank(),R:mkCoverPage(isClans),ln:'',rn:'',chid:null});
   // Spread 1: TOC + Ranks
-  spreads.push({L:mkTOC(src.chapters),R:mkRanksPage(),ln:'I',rn:'II',chid:null});
+  spreads.push({L:mkTOC(src.chapters),R:mkRanksPage(isClans),ln:'I',rn:'II',chid:null});
   let pg=0;
   let ci=0;
   for(const ch of src.chapters){
@@ -931,6 +995,7 @@ function openAdmin(){
   renderEChSel();renderEList();
   renderClChSel();renderClList();
   renderChList();
+  renderRkList();
   renderAdmRequests();
   // GitHub tab: token only
   document.getElementById('gh-token').value=ghCfg.token||'';
@@ -939,7 +1004,7 @@ function openAdmin(){
 function closeAdmin(){document.getElementById('admin-overlay').classList.remove('open')}
 
 function switchTab(t){
-  ['e','cl','ch','dq','gh'].forEach(x=>{
+  ['e','cl','ch','rk','dq','gh'].forEach(x=>{
     document.getElementById('tab-'+x).style.display=x===t?'':'none';
     document.getElementById('tb-'+x).classList.toggle('on',x===t);
   });
@@ -1015,7 +1080,7 @@ function renderEList(){
   if(!selChE){el.innerHTML='';return}
   const ch=data.book.chapters.find(c=>c.id===selChE);
   if(!ch||!ch.entries.length){el.innerHTML='<div class="empty-lbl">Aucun ennemi</div>';return}
-  const rk=rankInfo;
+  const rk=n=>rankInfo(n,false);
   el.innerHTML=ch.entries.map(e=>`<div class="e-item">
     <span class="e-nm">${esc(e.name)}</span>
     <span class="rtag" style="color:${rk(e.rank).color};border-color:${rk(e.rank).color}">${rk(e.rank).n}</span>
@@ -1048,7 +1113,7 @@ function editEnemy(id){
   }}
 }
 function delEnemy(id){if(!confirm('Supprimer ?'))return;for(const c of data.book.chapters)c.entries=c.entries.filter(e=>e.id!==id);saveData();renderEList();toast('Supprimé')}
-function cancelEnemy(){['ef-id','ef-nm','ef-vl','ef-bn','ef-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('ef-rk').value=RANKS[0].n;document.getElementById('ef-st').value='ACTIF';document.getElementById('ef-ttl').textContent='AJOUTER UN ENNEMI';document.getElementById('ef-media-list').innerHTML=''}
+function cancelEnemy(){['ef-id','ef-nm','ef-vl','ef-bn','ef-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('ef-rk').value=ranksFor(false)[0].n;document.getElementById('ef-st').value='ACTIF';document.getElementById('ef-ttl').textContent='AJOUTER UN ENNEMI';document.getElementById('ef-media-list').innerHTML=''}
 
 // ── CLAN CHAPTER SELECTOR ──────────────────────────────────
 function renderClChSel(){
@@ -1065,7 +1130,7 @@ function renderClList(){
   if(!selChCl){el.innerHTML='';return}
   const ch=data.clans.chapters.find(c=>c.id===selChCl);
   if(!ch||!ch.entries.length){el.innerHTML='<div class="empty-lbl">Aucun clan</div>';return}
-  const rk=rankInfo;
+  const rk=n=>rankInfo(n,true);
   el.innerHTML=ch.entries.map(e=>`<div class="e-item">
     <span class="e-nm">${esc(e.name)}</span>
     <span class="rtag" style="color:${rk(e.rank).color};border-color:${rk(e.rank).color}">${rk(e.rank).n}</span>
@@ -1099,7 +1164,7 @@ function editClan(id){
   }}
 }
 function delClan(id){if(!confirm('Supprimer ?'))return;for(const c of data.clans.chapters)c.entries=c.entries.filter(e=>e.id!==id);saveData();renderClList();toast('Supprimé')}
-function cancelClan(){['clf-id','clf-nm','clf-al','clf-ld','clf-mb','clf-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('clf-rk').value=RANKS[0].n;document.getElementById('clf-st').value='ACTIF';document.getElementById('clf-ttl').textContent='AJOUTER UN CLAN';document.getElementById('clf-media-list').innerHTML=''}
+function cancelClan(){['clf-id','clf-nm','clf-al','clf-ld','clf-mb','clf-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('clf-rk').value=ranksFor(true)[0].n;document.getElementById('clf-st').value='ACTIF';document.getElementById('clf-ttl').textContent='AJOUTER UN CLAN';document.getElementById('clf-media-list').innerHTML=''}
 
 // ── CHAPTERS ───────────────────────────────────────────────
 function switchChTab(t){
@@ -1140,6 +1205,77 @@ function delChap(id){
   saveData();renderChList();renderEChSel();renderClChSel();toast('Chapitre supprimé');
 }
 function cancelChap(){document.getElementById('cf-id').value='';document.getElementById('cf-nm').value='';document.getElementById('cf-ttl').textContent='AJOUTER UN CHAPITRE'}
+
+// ── RANGS ────────────────────────────────────────────────────
+let curRkTab='book'; // 'book' | 'clans'
+function switchRkTab(t){
+  curRkTab=t;
+  document.getElementById('rks-book').classList.toggle('on',t==='book');
+  document.getElementById('rks-clans').classList.toggle('on',t==='clans');
+  cancelRank();
+  renderRkList();
+}
+function rkArr(){return curRkTab==='book'?data.ranksBook:data.ranksClans}
+function renderRkList(){
+  const arr=rkArr();
+  const el=document.getElementById('rk-list');
+  if(!arr.length){el.innerHTML='<div class="empty-lbl">Aucun rang</div>';return}
+  el.innerHTML=arr.slice().sort((a,b)=>a.n-b.n).map(r=>`<div class="ch-item">
+    <div class="rk-dot" style="background:${r.color};width:22px;height:22px;font-size:.58rem;flex-shrink:0">${r.n}</div>
+    <span class="e-nm">${esc(r.label)}</span>
+    <button class="btn btn-s" onclick="editRank(${r.n})">ÉDITER</button>
+    <button class="btn btn-d" onclick="delRank(${r.n})">SUPPR.</button>
+  </div>`).join('');
+}
+function syncColorTxt(val){
+  const c=document.getElementById('rkf-color');
+  if(/^#[0-9a-fA-F]{6}$/.test(val))c.value=val;
+}
+function saveRank(){
+  const n=parseInt(document.getElementById('rkf-n').value);
+  const lbl=document.getElementById('rkf-lbl').value.trim();
+  if(isNaN(n)||!lbl){toast('Numéro et nom requis');return}
+  let color=document.getElementById('rkf-color-txt').value.trim();
+  if(!/^#[0-9a-fA-F]{6}$/.test(color))color=document.getElementById('rkf-color').value;
+  const arr=rkArr();
+  const oldId=document.getElementById('rkf-id').value;
+  if(oldId!==''){
+    // editing — remove old entry if number changed, else update in place
+    const oldN=+oldId;
+    const idx=arr.findIndex(r=>r.n===oldN);
+    if(idx>=0){
+      if(n!==oldN&&arr.find(r=>r.n===n)){toast('Ce numéro de rang existe déjà');return}
+      arr[idx]={n,label:lbl,color};
+    }
+  }else{
+    if(arr.find(r=>r.n===n)){toast('Ce numéro de rang existe déjà');return}
+    arr.push({n,label:lbl,color});
+  }
+  cancelRank();saveData();renderRkList();populateRankSelects();toast('Rang enregistré');
+}
+function editRank(n){
+  const r=rkArr().find(x=>x.n===n);if(!r)return;
+  document.getElementById('rkf-id').value=r.n;
+  document.getElementById('rkf-n').value=r.n;
+  document.getElementById('rkf-lbl').value=r.label;
+  document.getElementById('rkf-color').value=r.color;
+  document.getElementById('rkf-color-txt').value=r.color;
+  document.getElementById('rkf-ttl').textContent='MODIFIER LE RANG';
+}
+function delRank(n){
+  if(!confirm('Supprimer ce rang ? Les fiches utilisant ce rang afficheront un rang inconnu.'))return;
+  const key=curRkTab==='book'?'ranksBook':'ranksClans';
+  data[key]=data[key].filter(r=>r.n!==n);
+  saveData();renderRkList();populateRankSelects();toast('Rang supprimé');
+}
+function cancelRank(){
+  document.getElementById('rkf-id').value='';
+  document.getElementById('rkf-n').value='';
+  document.getElementById('rkf-lbl').value='';
+  document.getElementById('rkf-color').value='#8b0000';
+  document.getElementById('rkf-color-txt').value='';
+  document.getElementById('rkf-ttl').textContent='AJOUTER UN RANG';
+}
 
 // ── DEMANDES (admin) ───────────────────────────────────────
 function renderAdmRequests(){
