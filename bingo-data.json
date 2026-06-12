@@ -5,6 +5,16 @@
         "id": 1,
         "name": "🟢 Menaces Mineures",
         "entries": []
+      },
+      {
+        "id": 2002,
+        "name": "🟡 Menaces Modérées",
+        "entries": []
+      },
+      {
+        "id": 2003,
+        "name": "🟠 Menaces Élevées",
+        "entries": []
       }
     ]
   },
@@ -30,5 +40,5 @@
     ]
   },
   "requests": [],
-  "nid": 2002
+  "nid": 2004
 }
