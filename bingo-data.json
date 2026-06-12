@@ -14,6 +14,16 @@
             "bounty": "?",
             "desc": "JOJO",
             "media": []
+          },
+          {
+            "id": 2009,
+            "name": "vfedvd",
+            "rank": 1,
+            "status": "ACTIF",
+            "village": "Inconnu",
+            "bounty": "?",
+            "desc": "zedrffer",
+            "media": []
           }
         ]
       },
@@ -62,11 +72,11 @@
       "proof": "https://tr.rbxcdn.com/180DAY-24cdcf826c9005dbf52d51b018664886/500/280/Image/Jpeg/noFilter",
       "by": "jojolerigolo",
       "date": "12/06/2026",
-      "status": "PENDING",
+      "status": "APPROUVE",
       "id": 2008
     }
   ],
-  "nid": 2009,
+  "nid": 2010,
   "ranksBook": [
     {
       "n": 1,
