@@ -3,72 +3,8 @@
     "chapters": [
       {
         "id": 1,
-        "name": "Genin & Chunin — Criminels Débutants",
-        "entries": [
-          {
-            "id": 101,
-            "name": "Mizuki",
-            "village": "Konohagakure",
-            "rank": 3,
-            "status": "NEUTRALISE",
-            "bounty": "1,000,000 ryō",
-            "desc": "Traître de Konoha. Voleur du Parchemin des Sceaux. Se transforme en tigre géant sous malédiction.",
-            "media": []
-          },
-          {
-            "id": 102,
-            "name": "Gatō",
-            "village": "Pays des Vagues",
-            "rank": 2,
-            "status": "NEUTRALISE",
-            "bounty": "5,000,000 ryō",
-            "desc": "Criminel ordinaire contrôlant le Pays des Vagues par la terreur. Aucune capacité ninja.",
-            "media": []
-          }
-        ]
-      },
-      {
-        "id": 2,
-        "name": "Jōnin & S-Rank — Criminels Majeurs",
-        "entries": [
-          {
-            "id": 201,
-            "name": "Zabuza Momochi",
-            "village": "Kirigakure",
-            "rank": 8,
-            "status": "NEUTRALISE",
-            "bounty": "15,000,000 ryō",
-            "desc": "Ancien des Sept Épéistes du Brouillard. Expert Kiri no Jutsu. Épée démoniaque Kubikiribocho. Très dangereux.",
-            "media": []
-          },
-          {
-            "id": 202,
-            "name": "Itachi Uchiha",
-            "village": "Konohagakure",
-            "rank": 10,
-            "status": "NEUTRALISE",
-            "bounty": "30,000,000 ryō",
-            "desc": "Génie Uchiha. Amaterasu, Tsukuyomi, Susano'o complet. A massacré son clan. Ex-Akatsuki. NE PAS APPROCHER.",
-            "media": []
-          },
-          {
-            "id": 2000,
-            "name": "okokoko",
-            "rank": 9,
-            "status": "ACTIF",
-            "village": "",
-            "bounty": "2000",
-            "desc": "ghj;tgujk",
-            "media": [
-              {
-                "type": "image",
-                "url": "https://media.discordapp.net/attachments/848620188203089951/1493025904211787796/image.png?ex=6a2be97a&is=6a2a97fa&hm=4fa24efcff7a3a84d4aab9e4193925f42a56e72e499057917bb49c346f567f8c&=&format=webp&quality=lossless",
-                "caption": "okokoko",
-                "portrait": true
-              }
-            ]
-          }
-        ]
+        "name": "🟢 Menaces Mineures",
+        "entries": []
       }
     ]
   },
