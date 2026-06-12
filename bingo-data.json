@@ -4,28 +4,7 @@
       {
         "id": 1,
         "name": "🟢 Menaces Mineures",
-        "entries": [
-          {
-            "id": 2007,
-            "name": "JOJO",
-            "rank": 7,
-            "status": "ACTIF",
-            "village": "Inconnu",
-            "bounty": "?",
-            "desc": "JOJO",
-            "media": []
-          },
-          {
-            "id": 2009,
-            "name": "vfedvd",
-            "rank": 1,
-            "status": "ACTIF",
-            "village": "Inconnu",
-            "bounty": "?",
-            "desc": "zedrffer",
-            "media": []
-          }
-        ]
+        "entries": []
       },
       {
         "id": 2002,
