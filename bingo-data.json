@@ -15,30 +15,22 @@
         "id": 2003,
         "name": "🟠 Menaces Élevées",
         "entries": []
+      },
+      {
+        "id": 2004,
+        "name": "🔴 Menaces Prioritaires",
+        "entries": []
+      },
+      {
+        "id": 2005,
+        "name": "👑 Menaces Légendaires",
+        "entries": []
       }
     ]
   },
   "clans": {
-    "chapters": [
-      {
-        "id": 10,
-        "name": "Alliances Interdites",
-        "entries": [
-          {
-            "id": 1001,
-            "name": "Akatsuki",
-            "leader": "Pain / Nagato",
-            "alliance": "Indépendant",
-            "members": "~10",
-            "rank": 12,
-            "status": "ACTIF",
-            "desc": "Organisation criminelle recrutant les jinchūriki et ninjas S-Rank. Objectif : domination mondiale. Danger extrême.",
-            "media": []
-          }
-        ]
-      }
-    ]
+    "chapters": []
   },
   "requests": [],
-  "nid": 2004
+  "nid": 2006
 }
