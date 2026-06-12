@@ -71,9 +71,20 @@
       "date": "12/06/2026",
       "status": "APPROUVE",
       "id": 2008
+    },
+    {
+      "target": "jojo",
+      "rank": 1,
+      "type": "ennemi",
+      "reason": "test",
+      "proof": "",
+      "by": "jojolerigolo",
+      "date": "12/06/2026",
+      "status": "PENDING",
+      "id": 2012
     }
   ],
-  "nid": 2012,
+  "nid": 2013,
   "ranksBook": [
     {
       "n": 1,
