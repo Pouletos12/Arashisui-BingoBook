@@ -45,7 +45,25 @@
       {
         "id": 2005,
         "name": "👑 Menaces Légendaires",
-        "entries": []
+        "entries": [
+          {
+            "id": 2011,
+            "name": "sofiane",
+            "rank": 14,
+            "status": "ACTIF",
+            "village": "",
+            "bounty": "1000",
+            "desc": "CACA",
+            "media": [
+              {
+                "type": "image",
+                "url": "https://cdn.discordapp.com/attachments/848620188203089951/1461810746861293608/Shisui_Thumb.png?ex=6a2d0c99&is=6a2bbb19&hm=e65b29a3b034371bae3b9c8e9a5bf34d93c43f7a6bffec3fb35ec8821c084aa4&",
+                "caption": "",
+                "portrait": false
+              }
+            ]
+          }
+        ]
       }
     ]
   },
@@ -76,7 +94,7 @@
       "id": 2008
     }
   ],
-  "nid": 2011,
+  "nid": 2012,
   "ranksBook": [
     {
       "n": 1,
