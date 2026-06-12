@@ -4,7 +4,18 @@
       {
         "id": 1,
         "name": "🟢 Menaces Mineures",
-        "entries": []
+        "entries": [
+          {
+            "id": 2007,
+            "name": "JOJO",
+            "rank": 7,
+            "status": "ACTIF",
+            "village": "Inconnu",
+            "bounty": "?",
+            "desc": "JOJO",
+            "media": []
+          }
+        ]
       },
       {
         "id": 2002,
@@ -40,9 +51,123 @@
       "proof": "",
       "by": "jojolerigolo",
       "date": "12/06/2026",
-      "status": "PENDING",
+      "status": "APPROUVE",
       "id": 2006
     }
   ],
-  "nid": 2007
+  "nid": 2008,
+  "ranksBook": [
+    {
+      "n": 1,
+      "label": "Genin",
+      "color": "#3a6e3a"
+    },
+    {
+      "n": 2,
+      "label": "Genin Expérimenté",
+      "color": "#2a5e2a"
+    },
+    {
+      "n": 3,
+      "label": "Chūnin",
+      "color": "#5e5e00"
+    },
+    {
+      "n": 4,
+      "label": "Fake Genin",
+      "color": "#666"
+    },
+    {
+      "n": 5,
+      "label": "Chūnin Expérimenté",
+      "color": "#6e4800"
+    },
+    {
+      "n": 6,
+      "label": "Jōnin Bas Niveau",
+      "color": "#004e78"
+    },
+    {
+      "n": 7,
+      "label": "Jōnin",
+      "color": "#003878"
+    },
+    {
+      "n": 8,
+      "label": "Jōnin Haut Niveau",
+      "color": "#002868"
+    },
+    {
+      "n": 9,
+      "label": "Jōnin Élite",
+      "color": "#3a0068"
+    },
+    {
+      "n": 10,
+      "label": "S-Rank",
+      "color": "#8b0000"
+    },
+    {
+      "n": 11,
+      "label": "Anbu",
+      "color": "#1c1c1c"
+    },
+    {
+      "n": 12,
+      "label": "Akatsuki",
+      "color": "#450045"
+    },
+    {
+      "n": 13,
+      "label": "Kage",
+      "color": "#7a5500"
+    },
+    {
+      "n": 14,
+      "label": "Légende BingoBook",
+      "color": "#8b0000"
+    }
+  ],
+  "ranksClans": [
+    {
+      "n": 1,
+      "label": "Clan Mineur",
+      "color": "#3a6e3a"
+    },
+    {
+      "n": 2,
+      "label": "Clan Établi",
+      "color": "#2a5e2a"
+    },
+    {
+      "n": 3,
+      "label": "Clan Influent",
+      "color": "#5e5e00"
+    },
+    {
+      "n": 4,
+      "label": "Clan Renégat",
+      "color": "#6e4800"
+    },
+    {
+      "n": 5,
+      "label": "Clan Majeur",
+      "color": "#003878"
+    },
+    {
+      "n": 6,
+      "label": "Clan d'Élite",
+      "color": "#3a0068"
+    },
+    {
+      "n": 7,
+      "label": "Organisation S-Rank",
+      "color": "#8b0000"
+    },
+    {
+      "n": 8,
+      "label": "Menace Légendaire",
+      "color": "#450045"
+    }
+  ]
 }
