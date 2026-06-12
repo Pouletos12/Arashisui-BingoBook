@@ -4,18 +4,7 @@
       {
         "id": 1,
         "name": "🟢 Menaces Mineures",
-        "entries": [
-          {
-            "id": 2014,
-            "name": "Test",
-            "rank": 1,
-            "status": "ACTIF",
-            "village": "Voleur",
-            "bounty": "1",
-            "desc": "Test",
-            "media": []
-          }
-        ]
+        "entries": []
       },
       {
         "id": 2002,
