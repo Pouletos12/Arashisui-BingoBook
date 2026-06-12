@@ -255,6 +255,12 @@ select.ap-in option{background:#0a0a16}
 .gh-ok{color:#88ff88;background:rgba(0,80,0,.2);border:1px solid rgba(50,180,50,.3)}
 .gh-err{color:#ff8888;background:rgba(80,0,0,.2);border:1px solid rgba(180,50,50,.3)}
 
+/* SYNC BADGE */
+#sync-badge{position:fixed;top:14px;right:16px;font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.12em;padding:4px 10px;border:1px solid;border-radius:2px;opacity:0;transition:opacity .4s;z-index:50;pointer-events:none}
+#sync-badge.ok{color:#88ee88;border-color:rgba(80,200,80,.4);background:rgba(0,60,0,.5)}
+#sync-badge.err{color:#ff8888;border-color:rgba(200,60,60,.4);background:rgba(60,0,0,.5)}
+#sync-badge.loading{color:rgba(200,150,12,.8);border-color:rgba(200,150,12,.3);background:rgba(10,10,22,.8)}
+#sync-badge.visible{opacity:1}
 /* TOAST */
 #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(70px);background:#0a0a16;border:1px solid rgba(200,150,12,.42);color:#c8960c;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.15em;padding:8px 20px;transition:transform .38s;z-index:700;pointer-events:none;white-space:nowrap}
 #toast.show{transform:translateX(-50%) translateY(0)}
@@ -311,6 +317,7 @@ select.ap-in option{background:#0a0a16}
       <button class="nav-btn" id="prev-btn" onclick="goBack()">&#9664;</button>
       <span class="spread-ind" id="sp-ind">— / —</span>
       <button class="nav-btn" id="next-btn" onclick="goNext()">&#9654;</button>
+      <button class="nav-btn" id="refresh-btn" onclick="manualRefresh()" title="Actualiser depuis GitHub" style="font-size:.72rem;opacity:.5">🔄</button>
     </div>
     <div class="nav-hint">FLÈCHES CLAVIER · SWIPE TACTILE</div>
   </div>
@@ -349,6 +356,8 @@ select.ap-in option{background:#0a0a16}
     </div>
   </div>
 </div>
+
+<div id="sync-badge"></div>
 
 <!-- Admin dot -->
 <div id="admin-trigger" onclick="showPwd()"></div>
@@ -468,26 +477,20 @@ select.ap-in option{background:#0a0a16}
     <!-- TAB: GITHUB -->
     <div id="tab-gh" style="display:none">
       <div class="gh-note">
-        ℹ️ <strong>Synchronisation GitHub</strong> — Permet à tous les visiteurs de voir vos modifications.<br>
-        1. Créez un repo GitHub (ex: <em>bloodlines-bingo</em>) avec un fichier <code>bingo-data.json</code> vide <code>{}</code>.<br>
-        2. Créez un token dans <em>Settings → Developer → Personal Access Tokens → Fine-grained</em> avec permission <em>Contents: Read & Write</em>.<br>
-        3. Renseignez les champs ci-dessous. Le token reste dans VOTRE navigateur uniquement.
+        <strong>Comment ça marche :</strong><br>
+        • Ouvrez ce fichier HTML dans l'éditeur GitHub (crayon en haut à droite).<br>
+        • Trouvez les 4 lignes <code>GH_USER / GH_REPO / GH_BRANCH / GH_FILE</code> tout en haut du &lt;script&gt;.<br>
+        • Renseignez-les avec votre username et le nom de votre repo.<br>
+        • Entrez votre token ci-dessous — <strong>les visiteurs n'ont besoin de rien</strong>, ils voient les données automatiquement à chaque visite.<br><br>
+        <span style="opacity:.7">Token : Settings → Developer settings → Personal Access Tokens → Fine-grained → Contents <em>Read &amp; Write</em></span>
       </div>
-      <div class="ap-2">
-        <div><label class="ap-lbl">USERNAME GITHUB</label><input class="ap-in" id="gh-user" type="text" placeholder="votre-pseudo"></div>
-        <div><label class="ap-lbl">NOM DU REPO</label><input class="ap-in" id="gh-repo" type="text" placeholder="bloodlines-bingo"></div>
-      </div>
-      <div class="ap-2">
-        <div><label class="ap-lbl">BRANCHE</label><input class="ap-in" id="gh-branch" type="text" placeholder="main" value="main"></div>
-        <div><label class="ap-lbl">NOM DU FICHIER</label><input class="ap-in" id="gh-file" type="text" placeholder="bingo-data.json" value="bingo-data.json"></div>
-      </div>
-      <label class="ap-lbl">TOKEN (stocké localement, jamais partagé)</label>
+      <div id="gh-config-info" style="font-family:Cinzel,serif;font-size:.65rem;color:rgba(200,150,12,.6);margin-bottom:12px;padding:7px 10px;border:1px solid rgba(200,150,12,.15);background:rgba(200,150,12,.04)"></div>
+      <label class="ap-lbl">VOTRE TOKEN GITHUB (stocké dans votre navigateur seulement)</label>
       <input class="ap-in" id="gh-token" type="password" placeholder="github_pat_...">
       <div id="gh-status"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;flex-wrap:wrap">
-        <button class="btn btn-g" onclick="ghSaveConfig()">SAUVEGARDER CONFIG</button>
-        <button class="btn btn-green" onclick="ghPush()">⬆ POUSSER VERS GITHUB</button>
-        <button class="btn btn-green" onclick="ghPull()">⬇ IMPORTER DEPUIS GITHUB</button>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="ghTestConnection()">TESTER LA CONNEXION</button>
+        <button class="btn btn-green" onclick="ghSaveToken()">SAUVEGARDER LE TOKEN</button>
       </div>
     </div>
 
@@ -503,6 +506,23 @@ select.ap-in option{background:#0a0a16}
 const SK  = 'bingo_book_v5';
 const GK  = 'bingo_gh_v1';
 const PWD = 'bloodlines';
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  CONFIG GITHUB — MODIFIER CES 4 LIGNES UNE SEULE FOIS   ║
+// ║  (dans l'éditeur GitHub web, ou localement)              ║
+// ╚══════════════════════════════════════════════════════════╝
+const GH_USER   = 'Pouletos12';               // ex: 'MonPseudo'
+const GH_REPO   = 'Arashisui-BingoBook';               // ex: 'bloodlines-bingo'
+const GH_BRANCH = 'main';
+const GH_FILE   = 'bingo-data.json';
+
+const GH_CONFIGURED = ()=> !!(GH_USER && GH_REPO);
+const GH_RAW_URL    = ()=> GH_CONFIGURED()
+  ? `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?t=${Date.now()}`
+  : null;
+const GH_API_URL    = ()=> GH_CONFIGURED()
+  ? `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`
+  : null;
 
 const RANKS = [
   {n:1,  label:'Genin',                color:'#3a6e3a'},
@@ -562,16 +582,39 @@ let lbItems  = [];
 let lbIdx    = 0;
 
 // ══════════════════════════════════════════════════════════════
-//  STORAGE
+//  STORAGE  (auto-sync GitHub ↔ localStorage)
 // ══════════════════════════════════════════════════════════════
-function loadData(){
+async function loadData(){
+  // 1. Charge localStorage (affichage instantané)
   try{const s=localStorage.getItem(SK);if(s)data=JSON.parse(s)}catch(e){}
   try{const g=localStorage.getItem(GK);if(g)ghCfg=JSON.parse(g)}catch(e){}
+
+  // 2. Si GitHub configuré → fetch en arrière-plan, sans token (repo public)
+  if(GH_CONFIGURED()){
+    setSyncBadge('⟳ Sync…','loading');
+    try{
+      const res=await fetch(GH_RAW_URL());
+      if(res.ok){
+        const j=await res.json();
+        if(j&&j.book&&j.clans){
+          data=j;
+          try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
+          setSyncBadge('✓ À jour','ok',2500);
+        }else{setSyncBadge('⚠ Données invalides','err',3000)}
+      }else{setSyncBadge('⚠ GitHub injoignable','err',3000)}
+    }catch(e){setSyncBadge('⚠ Hors ligne','err',3000)}
+  }
 }
+
 function saveData(){
   try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
   rebuild();
+  // Auto-push si token configuré
+  if(GH_CONFIGURED()&&ghCfg.token){
+    ghAutoPush();
+  }
 }
+
 function saveGhCfg(){
   try{localStorage.setItem(GK,JSON.stringify(ghCfg))}catch(e){}
 }
@@ -889,12 +932,9 @@ function openAdmin(){
   renderClChSel();renderClList();
   renderChList();
   renderAdmRequests();
-  // Load GH config into fields
-  document.getElementById('gh-user').value=ghCfg.user||'';
-  document.getElementById('gh-repo').value=ghCfg.repo||'';
-  document.getElementById('gh-branch').value=ghCfg.branch||'main';
-  document.getElementById('gh-file').value=ghCfg.file||'bingo-data.json';
+  // GitHub tab: token only
   document.getElementById('gh-token').value=ghCfg.token||'';
+  ghUpdateConfigInfo();
 }
 function closeAdmin(){document.getElementById('admin-overlay').classList.remove('open')}
 
@@ -1138,42 +1178,77 @@ function rejectRequest(id){
 }
 
 // ── GITHUB SYNC ─────────────────────────────────────────────
-function ghSaveConfig(){
-  ghCfg={user:document.getElementById('gh-user').value.trim(),repo:document.getElementById('gh-repo').value.trim(),branch:document.getElementById('gh-branch').value.trim()||'main',file:document.getElementById('gh-file').value.trim()||'bingo-data.json',token:document.getElementById('gh-token').value.trim()};
-  saveGhCfg();toast('Configuration sauvegardée');
-}
-function ghStatus(msg,ok){const el=document.getElementById('gh-status');el.className='gh-status '+(ok?'gh-ok':'gh-err');el.textContent=msg}
-
-async function ghPush(){
-  ghSaveConfig();
-  if(!ghCfg.user||!ghCfg.repo||!ghCfg.token){ghStatus('⚠ Renseignez user, repo et token',false);return}
-  ghStatus('Envoi en cours…',true);
+// Pousse silencieusement les données à chaque sauvegarde admin
+async function ghAutoPush(){
+  if(!GH_CONFIGURED()||!ghCfg.token)return;
+  setSyncBadge('⟳ Sauvegarde…','loading');
   try{
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
-    const url=`https://api.github.com/repos/${ghCfg.user}/${ghCfg.repo}/contents/${ghCfg.file}`;
     const headers={'Authorization':`token ${ghCfg.token}`,'Content-Type':'application/json'};
-    // Get current SHA
-    let sha=undefined;
-    try{const r=await fetch(url,{headers});if(r.ok){const j=await r.json();sha=j.sha}}catch(e){}
-    const body={message:'Update Bingo Book data',content,...(sha&&{sha})};
-    const res=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
-    if(res.ok){ghStatus('✓ Données envoyées avec succès !',true);toast('Synchronisé avec GitHub')}
-    else{const j=await res.json();ghStatus('✗ Erreur: '+( j.message||res.status),false)}
-  }catch(e){ghStatus('✗ Erreur réseau: '+e.message,false)}
+    let sha;
+    try{const r=await fetch(GH_API_URL(),{headers});if(r.ok){const j=await r.json();sha=j.sha}}catch(e){}
+    const res=await fetch(GH_API_URL(),{method:'PUT',headers,body:JSON.stringify({message:'Update Bingo Book',content,...(sha&&{sha})})});
+    if(res.ok){setSyncBadge('✓ Sync GitHub','ok',3000)}
+    else{const j=await res.json();setSyncBadge('✗ '+(j.message||res.status),'err',4000)}
+  }catch(e){setSyncBadge('✗ Erreur réseau','err',4000)}
 }
 
-async function ghPull(){
-  ghSaveConfig();
-  if(!ghCfg.user||!ghCfg.repo){ghStatus('⚠ Renseignez user et repo',false);return}
-  ghStatus('Import en cours…',true);
+// Actualisation manuelle (bouton 🔄)
+async function manualRefresh(){
+  if(!GH_CONFIGURED()){toast('GitHub non configuré');return}
+  setSyncBadge('⟳ Actualisation…','loading');
   try{
-    const url=`https://raw.githubusercontent.com/${ghCfg.user}/${ghCfg.repo}/${ghCfg.branch}/${ghCfg.file}?t=${Date.now()}`;
-    const res=await fetch(url);
-    if(!res.ok){ghStatus('✗ Fichier introuvable ('+res.status+')',false);return}
+    const res=await fetch(GH_RAW_URL());
+    if(!res.ok){setSyncBadge('✗ Échec ('+res.status+')','err',3000);return}
     const j=await res.json();
-    if(j.book&&j.clans){data=j;saveData();ghStatus('✓ Données importées !',true);toast('Import réussi')}
-    else ghStatus('✗ Format de données invalide',false);
-  }catch(e){ghStatus('✗ Erreur: '+e.message,false)}
+    if(j&&j.book&&j.clans){
+      data=j;try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
+      rebuild();setSyncBadge('✓ Actualisé','ok',2500);toast('Données rechargées');
+    }else setSyncBadge('✗ Format invalide','err',3000);
+  }catch(e){setSyncBadge('✗ Hors ligne','err',3000)}
+}
+
+// Sauvegarde uniquement le token (appelé depuis l'admin)
+function ghSaveToken(){
+  ghCfg.token=document.getElementById('gh-token').value.trim();
+  saveGhCfg();toast('Token sauvegardé');
+  ghUpdateConfigInfo();
+}
+
+// Test de connexion depuis l'admin
+async function ghTestConnection(){
+  const token=document.getElementById('gh-token').value.trim()||ghCfg.token;
+  const ghSt=el=>document.getElementById('gh-status').className='gh-status '+(el.ok?'gh-ok':'gh-err')+(document.getElementById('gh-status').className=' gh-status '+(el.ok?'gh-ok':'gh-err'),'');
+  const setS=(msg,ok)=>{const el=document.getElementById('gh-status');el.className='gh-status '+(ok?'gh-ok':'gh-err');el.textContent=msg};
+  if(!GH_CONFIGURED()){setS('⚠ GH_USER / GH_REPO non configurés dans le fichier HTML',false);return}
+  setS('Test en cours…',true);
+  try{
+    const res=await fetch(GH_API_URL(),{headers:{'Authorization':`token ${token}`}});
+    if(res.ok){setS('✓ Connexion réussie — token valide !',true)}
+    else if(res.status===404){setS(`✗ Fichier "${GH_FILE}" introuvable dans ${GH_USER}/${GH_REPO}`,false)}
+    else if(res.status===401){setS('✗ Token invalide ou expiré',false)}
+    else{setS('✗ Erreur '+res.status,false)}
+  }catch(e){setS('✗ Erreur réseau: '+e.message,false)}
+}
+
+function ghUpdateConfigInfo(){
+  const el=document.getElementById('gh-config-info');
+  if(!el)return;
+  if(GH_CONFIGURED()){
+    el.innerHTML=`Repo : <strong style="color:rgba(200,150,12,.9)">${GH_USER}/${GH_REPO}</strong> · Fichier : <strong style="color:rgba(200,150,12,.9)">${GH_FILE}</strong> · Token : <strong style="color:${ghCfg.token?'#88ee88':'#ff8888'}">${ghCfg.token?'✓ configuré':'✗ non configuré'}</strong>`;
+  }else{
+    el.innerHTML='<span style="color:#ff8888">⚠ GH_USER et GH_REPO non encore renseignés dans le fichier HTML.</span>';
+  }
+}
+
+// ── SYNC BADGE ─────────────────────────────────────────────
+let syncBadgeTimer;
+function setSyncBadge(msg,type,hideAfter){
+  const el=document.getElementById('sync-badge');
+  el.textContent=msg;
+  el.className=type+' visible';
+  clearTimeout(syncBadgeTimer);
+  if(hideAfter)syncBadgeTimer=setTimeout(()=>el.classList.remove('visible'),hideAfter);
 }
 
 // ── TOAST ──────────────────────────────────────────────────
@@ -1192,9 +1267,12 @@ document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:tru
 document.addEventListener('touchend',e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>55&&curView!=='demandes'){d>0?goNext():goBack()}});
 
 // ── INIT ──────────────────────────────────────────────────
-loadData();
-populateRankSelects();
-buildSpreads();
+async function init(){
+  await loadData();         // charge localStorage, puis GitHub si configuré
+  populateRankSelects();
+  buildSpreads();           // affichage initial (localStorage) déjà disponible
+}
+init();
 </script>
 </body>
 </html>
