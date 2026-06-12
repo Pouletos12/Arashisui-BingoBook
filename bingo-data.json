@@ -24,16 +24,6 @@
             "bounty": "?",
             "desc": "zedrffer",
             "media": []
-          },
-          {
-            "id": 2010,
-            "name": "vfedvd",
-            "rank": 1,
-            "status": "ACTIF",
-            "village": "Inconnu",
-            "bounty": "?",
-            "desc": "zedrffer",
-            "media": []
           }
         ]
       },
@@ -63,6 +53,17 @@
     "chapters": []
   },
   "requests": [
+    {
+      "target": "JOJO",
+      "rank": 7,
+      "type": "ennemi",
+      "reason": "JOJO",
+      "proof": "",
+      "by": "jojolerigolo",
+      "date": "12/06/2026",
+      "status": "APPROUVE",
+      "id": 2006
+    },
     {
       "target": "vfedvd",
       "rank": 1,
