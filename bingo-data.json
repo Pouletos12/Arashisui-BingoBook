@@ -64,17 +64,6 @@
   },
   "requests": [
     {
-      "target": "JOJO",
-      "rank": 7,
-      "type": "ennemi",
-      "reason": "JOJO",
-      "proof": "",
-      "by": "jojolerigolo",
-      "date": "12/06/2026",
-      "status": "APPROUVE",
-      "id": 2006
-    },
-    {
       "target": "vfedvd",
       "rank": 1,
       "type": "ennemi",
