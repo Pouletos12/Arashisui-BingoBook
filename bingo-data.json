@@ -24,6 +24,16 @@
             "bounty": "?",
             "desc": "zedrffer",
             "media": []
+          },
+          {
+            "id": 2010,
+            "name": "vfedvd",
+            "rank": 1,
+            "status": "ACTIF",
+            "village": "Inconnu",
+            "bounty": "?",
+            "desc": "zedrffer",
+            "media": []
           }
         ]
       },
@@ -76,7 +86,7 @@
       "id": 2008
     }
   ],
-  "nid": 2010,
+  "nid": 2011,
   "ranksBook": [
     {
       "n": 1,
