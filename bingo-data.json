@@ -93,9 +93,20 @@
       "date": "12/06/2026",
       "status": "PENDING",
       "id": 2013
+    },
+    {
+      "target": "GABRIEL",
+      "rank": 4,
+      "type": "ennemi",
+      "reason": "TEST",
+      "proof": "",
+      "by": "jojolerigolo",
+      "date": "12/06/2026",
+      "status": "PENDING",
+      "id": 2016
     }
   ],
-  "nid": 2016,
+  "nid": 2017,
   "ranksBook": [
     {
       "n": 1,
