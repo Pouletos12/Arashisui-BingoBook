@@ -634,17 +634,11 @@ async function loadData(){
       if(res.ok){
         const j=await res.json();
         if(j&&j.book&&j.clans){
-          // Avant d'écraser, mémoriser les demandes résolues localement
-          // pour ne pas les réimporter si GitHub est en retard d'un push.
           const localApproved=data.requestsApproved||[];
           const localApprovedIds=new Set(localApproved.map(r=>r.id));
-          // Filtrer du requests distant celles déjà approuvées localement
           if(j.requests)j.requests=j.requests.filter(r=>!localApprovedIds.has(r.id));
-          // Garder les approuvées des deux côtés
           const remoteApprovedIds=new Set((j.requestsApproved||[]).map(r=>r.id));
-          for(const r of localApproved){
-            if(!remoteApprovedIds.has(r.id))(j.requestsApproved=j.requestsApproved||[]).push(r);
-          }
+          for(const r of localApproved){if(!remoteApprovedIds.has(r.id))(j.requestsApproved=j.requestsApproved||[]).push(r)}
           data=j;
           ensureData();
           try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
@@ -687,6 +681,14 @@ function saveData(){
   if(GH_CONFIGURED()&&ghCfg.token){
     ghAutoPush();
   }
+}
+
+// Sauvegarde locale uniquement, sans push GitHub.
+// Utilisé quand on pré-remplit un formulaire depuis une demande
+// pour éviter un conflit de SHA avec le push qui suit juste après.
+function saveLocalOnly(){
+  recomputeNid();
+  try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
 }
 
 function saveGhCfg(){
@@ -1346,7 +1348,8 @@ function importFromApproved(prefix){
     addMediaRow(prefix,{type,url,caption:cap,portrait:i===0&&type==='image'});
   });
   req.usedAt=new Date().toLocaleDateString('fr-FR');
-  saveData();renderAdmApprovedList();
+  saveLocalOnly(); // Pas de push GitHub ici — le push se fait à l'enregistrement de la fiche
+  renderAdmApprovedList();
   toast('Informations importées — vérifiez puis enregistrez');
 }
 
@@ -1383,43 +1386,68 @@ function rejectRequest(id){
 }
 
 // ── GITHUB SYNC ─────────────────────────────────────────────
-// Pousse silencieusement les données à chaque sauvegarde admin
-async function ghAutoPush(retries){
+// Pousse silencieusement les données à chaque sauvegarde admin.
+// Un seul push à la fois : si un push est déjà en cours on l'annule et
+// on attend qu'il finisse avant d'en démarrer un nouveau avec les données les plus récentes.
+let _pushPending=false;
+let _pushTimer=null;
+function ghAutoPush(){
+  // Debounce : regroupe les appels rapprochés (ex: importFromApproved + saveEnemy)
+  // en un seul push 300ms après le dernier appel.
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(()=>_ghDoPush(3),300);
+}
+async function _ghDoPush(retries){
   if(!GH_CONFIGURED()||!ghCfg.token)return;
-  retries=retries===undefined?3:retries;
+  if(_pushPending){
+    // Un push est déjà en vol — on remet en attente pour repartir après
+    clearTimeout(_pushTimer);
+    _pushTimer=setTimeout(()=>_ghDoPush(retries),500);
+    return;
+  }
+  _pushPending=true;
   setSyncBadge('⟳ Sauvegarde…','loading');
+  // Snapshot des données au moment du push (pas de mutation entre-temps)
+  const snapshot=JSON.parse(JSON.stringify(data));
   try{
     const headers={'Authorization':`token ${ghCfg.token}`,'Content-Type':'application/json'};
+    // Toujours récupérer un SHA frais — jamais de cache
     let sha;
     try{
-      const r=await fetch(GH_API_URL(),{headers});
+      const r=await fetch(GH_API_URL(),{headers,cache:'no-store'});
       if(r.ok){
         const j=await r.json();
         sha=j.sha;
         // Fusionne les demandes ajoutées entre-temps par le bot Discord
-        // pour ne pas les écraser avec notre copie locale plus ancienne.
         try{
           const remote=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
           mergeRemoteRequests(remote);
+          // Re-snapshot après merge pour inclure les nouvelles demandes du bot
+          Object.assign(snapshot, {requests:data.requests, requestsApproved:data.requestsApproved, nid:data.nid});
         }catch(e){}
       }
     }catch(e){}
-    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
-    const res=await fetch(GH_API_URL(),{method:'PUT',headers,body:JSON.stringify({message:'Update Bingo Book',content,branch:GH_BRANCH,...(sha&&{sha})})});
-    if(res.ok){setSyncBadge('✓ Sync GitHub','ok',3000);try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}return}
-    if(res.status===409&&retries>0){
-      // Conflit de version : un autre admin a modifié le fichier entre-temps.
-      // On retente avec le sha le plus récent.
-      await new Promise(r=>setTimeout(r,400));
-      return ghAutoPush(retries-1);
+    const fileContent=btoa(unescape(encodeURIComponent(JSON.stringify(snapshot,null,2))));
+    const res=await fetch(GH_API_URL(),{method:'PUT',headers,body:JSON.stringify({message:'Update Bingo Book',content:fileContent,branch:GH_BRANCH,...(sha&&{sha})})});
+    if(res.ok){
+      setSyncBadge('✓ Sync GitHub','ok',3000);
+      try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
+      _pushPending=false;return;
+    }
+    if((res.status===409||res.status===422)&&retries>0){
+      // SHA périmé : un autre push a eu lieu entre-temps → on retente immédiatement
+      _pushPending=false;
+      await new Promise(r=>setTimeout(r,300));
+      return _ghDoPush(retries-1);
     }
     const j=await res.json().catch(()=>({}));
     setSyncBadge('✗ '+(j.message||res.status),'err',6000);
-    toast('⚠ Échec sauvegarde GitHub : '+(j.message||res.status)+' — vos changements ne sont PAS encore en ligne, réessayez 🔄');
+    toast('⚠ Échec sauvegarde GitHub : '+(j.message||res.status)+' — réessayez 🔄');
   }catch(e){
     setSyncBadge('✗ Erreur réseau','err',6000);
     toast('⚠ Erreur réseau — sauvegarde GitHub échouée, réessayez');
   }
+  _pushPending=false;
 }
 
 // Fusionne les demandes (requests/requestsApproved/nid) présentes sur GitHub
@@ -1427,14 +1455,11 @@ async function ghAutoPush(retries){
 // pour éviter qu'un push local ne les efface.
 function mergeRemoteRequests(remote){
   if(!remote)return;
-  // Les ids déjà dans requestsApproved (ou rejetés donc absents) sont "résolus" :
-  // on ne les réimporte JAMAIS depuis requests distant, même si GitHub est en retard.
   const approvedIds=new Set((data.requestsApproved||[]).map(r=>r.id));
   const localIds=new Set([...(data.requests||[]).map(r=>r.id),...approvedIds]);
   let added=false;
   for(const r of (remote.requests||[])){
-    // Ignorer si déjà approuvé/rejeté localement — le local a raison
-    if(approvedIds.has(r.id))continue;
+    if(approvedIds.has(r.id))continue; // déjà résolu localement
     if(!localIds.has(r.id)){data.requests.push(r);localIds.add(r.id);added=true}
   }
   for(const r of (remote.requestsApproved||[])){
@@ -1453,14 +1478,11 @@ async function manualRefresh(){
     if(!res.ok){setSyncBadge('✗ Échec ('+res.status+')','err',3000);return}
     const j=await res.json();
     if(j&&j.book&&j.clans){
-      // Même logique que loadData : préserver les demandes résolues localement
       const localApproved=data.requestsApproved||[];
       const localApprovedIds=new Set(localApproved.map(r=>r.id));
       if(j.requests)j.requests=j.requests.filter(r=>!localApprovedIds.has(r.id));
       const remoteApprovedIds=new Set((j.requestsApproved||[]).map(r=>r.id));
-      for(const r of localApproved){
-        if(!remoteApprovedIds.has(r.id))(j.requestsApproved=j.requestsApproved||[]).push(r);
-      }
+      for(const r of localApproved){if(!remoteApprovedIds.has(r.id))(j.requestsApproved=j.requestsApproved||[]).push(r)}
       data=j;ensureData();try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
       rebuild();setSyncBadge('✓ Actualisé','ok',2500);toast('Données rechargées');
     }else setSyncBadge('✗ Format invalide','err',3000);
