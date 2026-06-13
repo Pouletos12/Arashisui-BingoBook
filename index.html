@@ -634,6 +634,17 @@ async function loadData(){
       if(res.ok){
         const j=await res.json();
         if(j&&j.book&&j.clans){
+          // Avant d'écraser, mémoriser les demandes résolues localement
+          // pour ne pas les réimporter si GitHub est en retard d'un push.
+          const localApproved=data.requestsApproved||[];
+          const localApprovedIds=new Set(localApproved.map(r=>r.id));
+          // Filtrer du requests distant celles déjà approuvées localement
+          if(j.requests)j.requests=j.requests.filter(r=>!localApprovedIds.has(r.id));
+          // Garder les approuvées des deux côtés
+          const remoteApprovedIds=new Set((j.requestsApproved||[]).map(r=>r.id));
+          for(const r of localApproved){
+            if(!remoteApprovedIds.has(r.id))(j.requestsApproved=j.requestsApproved||[]).push(r);
+          }
           data=j;
           ensureData();
           try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
@@ -1416,9 +1427,14 @@ async function ghAutoPush(retries){
 // pour éviter qu'un push local ne les efface.
 function mergeRemoteRequests(remote){
   if(!remote)return;
-  const localIds=new Set([...(data.requests||[]).map(r=>r.id),...(data.requestsApproved||[]).map(r=>r.id)]);
+  // Les ids déjà dans requestsApproved (ou rejetés donc absents) sont "résolus" :
+  // on ne les réimporte JAMAIS depuis requests distant, même si GitHub est en retard.
+  const approvedIds=new Set((data.requestsApproved||[]).map(r=>r.id));
+  const localIds=new Set([...(data.requests||[]).map(r=>r.id),...approvedIds]);
   let added=false;
   for(const r of (remote.requests||[])){
+    // Ignorer si déjà approuvé/rejeté localement — le local a raison
+    if(approvedIds.has(r.id))continue;
     if(!localIds.has(r.id)){data.requests.push(r);localIds.add(r.id);added=true}
   }
   for(const r of (remote.requestsApproved||[])){
@@ -1437,6 +1453,14 @@ async function manualRefresh(){
     if(!res.ok){setSyncBadge('✗ Échec ('+res.status+')','err',3000);return}
     const j=await res.json();
     if(j&&j.book&&j.clans){
+      // Même logique que loadData : préserver les demandes résolues localement
+      const localApproved=data.requestsApproved||[];
+      const localApprovedIds=new Set(localApproved.map(r=>r.id));
+      if(j.requests)j.requests=j.requests.filter(r=>!localApprovedIds.has(r.id));
+      const remoteApprovedIds=new Set((j.requestsApproved||[]).map(r=>r.id));
+      for(const r of localApproved){
+        if(!remoteApprovedIds.has(r.id))(j.requestsApproved=j.requestsApproved||[]).push(r);
+      }
       data=j;ensureData();try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
       rebuild();setSyncBadge('✓ Actualisé','ok',2500);toast('Données rechargées');
     }else setSyncBadge('✗ Format invalide','err',3000);
