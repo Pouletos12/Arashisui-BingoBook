@@ -9,7 +9,20 @@
       {
         "id": 2002,
         "name": "🟡 Menaces Modérées",
-        "entries": []
+        "entries": [
+          {
+            "id": 2018,
+            "name": "jojo",
+            "rank": 3,
+            "status": "DISPARU",
+            "village": "j",
+            "bounty": "200",
+            "desc": "caca",
+            "media": [],
+            "updatedAt": "13/06/2026",
+            "createdAt": "13/06/2026"
+          }
+        ]
       },
       {
         "id": 2003,
@@ -63,7 +76,7 @@
       "id": 2016
     }
   ],
-  "nid": 2018,
+  "nid": 2019,
   "ranksBook": [
     {
       "n": 1,
