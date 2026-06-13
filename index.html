@@ -319,7 +319,7 @@ select.ap-in option{background:#0a0a16}
       <button class="nav-btn" id="prev-btn" onclick="goBack()">&#9664;</button>
       <span class="spread-ind" id="sp-ind">— / —</span>
       <button class="nav-btn" id="next-btn" onclick="goNext()">&#9654;</button>
-      <button class="nav-btn" id="refresh-btn" onclick="manualRefresh()" title="Actualiser depuis GitHub" style="font-size:.72rem;opacity:.5">🔄</button>
+      <button class="nav-btn" id="refresh-btn" onclick="manualRefresh()" title="Actualiser depuis JSONBin" style="font-size:.72rem;opacity:.5">🔄</button>
     </div>
     <div class="nav-hint">FLÈCHES CLAVIER · SWIPE TACTILE</div>
   </div>
@@ -413,7 +413,7 @@ select.ap-in option{background:#0a0a16}
       <button class="tab"    id="tb-cl" onclick="switchTab('cl')">CLANS</button>
       <button class="tab"    id="tb-ch" onclick="switchTab('ch')">CHAPITRES</button>
       <button class="tab"    id="tb-dq" onclick="switchTab('dq')">DEMANDES</button>
-      <button class="tab"    id="tb-gh" onclick="switchTab('gh')">GITHUB</button>
+      <button class="tab"    id="tb-gh" onclick="switchTab('gh')">JSONBIN</button>
     </div>
 
     <!-- TAB: ENNEMIS -->
@@ -512,20 +512,27 @@ select.ap-in option{background:#0a0a16}
     <!-- TAB: GITHUB -->
     <div id="tab-gh" style="display:none">
       <div class="gh-note">
-        <strong>Comment ça marche :</strong><br>
-        • Ouvrez ce fichier HTML dans l'éditeur GitHub (crayon en haut à droite).<br>
-        • Trouvez les 4 lignes <code>GH_USER / GH_REPO / GH_BRANCH / GH_FILE</code> tout en haut du &lt;script&gt;.<br>
-        • Renseignez-les avec votre username et le nom de votre repo.<br>
-        • Entrez votre token ci-dessous — <strong>les visiteurs n'ont besoin de rien</strong>, ils voient les données automatiquement à chaque visite.<br><br>
-        <span style="opacity:.7">Token : Settings → Developer settings → Personal Access Tokens → Fine-grained → Contents <em>Read &amp; Write</em></span>
+        <strong>Configuration JSONBin.io</strong> — Synchronisation sans conflit, même avec plusieurs admins simultanés.<br><br>
+        <strong>1.</strong> Créez un compte gratuit sur <a href="https://jsonbin.io" target="_blank" style="color:#c8960c">jsonbin.io</a><br>
+        <strong>2.</strong> Allez dans <em>API Keys</em> → copiez votre <em>Secret Key</em><br>
+        <strong>3.</strong> Cliquez <em>NEW BIN</em> → collez <code>{}</code> → Save → copiez le BIN ID (dans l'URL)<br>
+        <strong>4.</strong> Renseignez les deux champs ci-dessous et sauvegardez.<br><br>
+        <span style="opacity:.7">Les visiteurs voient les données automatiquement. Les admins n'ont besoin que du mot de passe admin.</span>
       </div>
-      <div id="gh-config-info" style="font-family:Cinzel,serif;font-size:.65rem;color:rgba(200,150,12,.6);margin-bottom:12px;padding:7px 10px;border:1px solid rgba(200,150,12,.15);background:rgba(200,150,12,.04)"></div>
-      <label class="ap-lbl">VOTRE TOKEN GITHUB (stocké dans votre navigateur seulement)</label>
-      <input class="ap-in" id="gh-token" type="password" placeholder="github_pat_...">
+      <div class="ap-2">
+        <div>
+          <label class="ap-lbl">BIN ID</label>
+          <input class="ap-in" id="jb-bin" type="text" placeholder="67a1b2c3d4e5f6a7b8c9d0e1">
+        </div>
+        <div>
+          <label class="ap-lbl">SECRET KEY (stockée localement)</label>
+          <input class="ap-in" id="jb-key" type="password" placeholder="$2a$10$...">
+        </div>
+      </div>
       <div id="gh-status"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap">
-        <button class="btn btn-g" onclick="ghTestConnection()">TESTER LA CONNEXION</button>
-        <button class="btn btn-green" onclick="ghSaveToken()">SAUVEGARDER LE TOKEN</button>
+        <button class="btn btn-g" onclick="jbTest()">TESTER LA CONNEXION</button>
+        <button class="btn btn-green" onclick="jbSaveConfig()">SAUVEGARDER LA CONFIG</button>
       </div>
     </div>
 
@@ -539,25 +546,20 @@ select.ap-in option{background:#0a0a16}
 //  CONFIG
 // ══════════════════════════════════════════════════════════════
 const SK  = 'bingo_book_v5';
-const GK  = 'bingo_gh_v1';
+const JB_LEGACY_KEY = 'bingo_gh_v1'; // legacy, ignoré
 const PWD = 'bloodlines';
 
-// ╔══════════════════════════════════════════════════════════╗
-// ║  CONFIG GITHUB — MODIFIER CES 4 LIGNES UNE SEULE FOIS   ║
-// ║  (dans l'éditeur GitHub web, ou localement)              ║
-// ╚══════════════════════════════════════════════════════════╝
-const GH_USER   = 'Pouletos12';               // ex: 'MonPseudo'
-const GH_REPO   = 'Arashisui-BingoBook';               // ex: 'bloodlines-bingo'
-const GH_BRANCH = 'main';
-const GH_FILE   = 'bingo-data.json';
+// Config JSONBin — stockée dans localStorage via le panneau admin
+// Clé de stockage
+const JB_CFG_KEY = 'bingo_jb_v1';
+let jbCfg = {bin:'', key:''};  // chargé depuis localStorage dans loadData()
 
-const GH_CONFIGURED = ()=> !!(GH_USER && GH_REPO);
-const GH_RAW_URL    = ()=> GH_CONFIGURED()
-  ? `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?t=${Date.now()}`
-  : null;
-const GH_API_URL    = ()=> GH_CONFIGURED()
-  ? `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`
-  : null;
+const JB_CONFIGURED = ()=> !!(jbCfg.bin && jbCfg.key);
+const JB_URL        = ()=> `https://api.jsonbin.io/v3/b/${jbCfg.bin}`;
+const JB_LATEST     = ()=> `https://api.jsonbin.io/v3/b/${jbCfg.bin}/latest`;
+const JB_HEADERS    = ()=>({'X-Master-Key': jbCfg.key, 'Content-Type':'application/json'});
+// Version publique pour les visiteurs (sans clé, bin doit être PUBLIC)
+const JB_PUBLIC_URL = ()=> `https://api.jsonbin.io/v3/b/${jbCfg.bin}/latest`;
 
 const RANKS = [
   {n:1,  label:'Genin',                color:'#3a6e3a'},
@@ -606,7 +608,7 @@ const DEFAULT = {
 //  STATE
 // ══════════════════════════════════════════════════════════════
 let data     = JSON.parse(JSON.stringify(DEFAULT));
-let ghCfg    = {user:'',repo:'',branch:'main',file:'bingo-data.json',token:''};
+// ghCfg supprimé — remplacé par jbCfg (JSONBin)
 let spreads  = [];
 let cur      = 0;
 let busy     = false;
@@ -623,17 +625,21 @@ let lbIdx    = 0;
 async function loadData(){
   // 1. Charge localStorage (affichage instantané)
   try{const s=localStorage.getItem(SK);if(s)data=JSON.parse(s)}catch(e){}
-  try{const g=localStorage.getItem(GK);if(g)ghCfg=JSON.parse(g)}catch(e){}
+  // Charge config JSONBin
+  try{const g=localStorage.getItem(JB_CFG_KEY);if(g)jbCfg=JSON.parse(g)}catch(e){}
   ensureData();
 
-  // 2. Si GitHub configuré → fetch en arrière-plan, sans token (repo public)
-  if(GH_CONFIGURED()){
+  // 2. Si JSONBin configuré → fetch public en arrière-plan (pas de clé nécessaire)
+  if(jbCfg.bin){
     setSyncBadge('⟳ Sync…','loading');
     try{
-      const res=await fetch(GH_RAW_URL());
+      const headers = jbCfg.key ? {'X-Master-Key':jbCfg.key} : {};
+      const res=await fetch(JB_PUBLIC_URL(),{headers,cache:'no-store'});
       if(res.ok){
-        const j=await res.json();
+        const json=await res.json();
+        const j=json.record||json; // JSONBin v3 enveloppe dans {record:{...}}
         if(j&&j.book&&j.clans){
+          // Préserver les demandes résolues localement
           const localApproved=data.requestsApproved||[];
           const localApprovedIds=new Set(localApproved.map(r=>r.id));
           if(j.requests)j.requests=j.requests.filter(r=>!localApprovedIds.has(r.id));
@@ -644,7 +650,7 @@ async function loadData(){
           try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
           setSyncBadge('✓ À jour','ok',2500);
         }else{setSyncBadge('⚠ Données invalides','err',3000)}
-      }else{setSyncBadge('⚠ GitHub injoignable','err',3000)}
+      }else{setSyncBadge('⚠ JSONBin injoignable ('+res.status+')','err',3000)}
     }catch(e){setSyncBadge('⚠ Hors ligne','err',3000)}
   }
 }
@@ -677,22 +683,18 @@ function saveData(){
   recomputeNid();
   try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
   rebuild();
-  // Auto-push si token configuré
-  if(GH_CONFIGURED()&&ghCfg.token){
-    ghAutoPush();
-  }
+  if(JB_CONFIGURED())jbPush();
 }
 
-// Sauvegarde locale uniquement, sans push GitHub.
+// Sauvegarde locale uniquement (pas de push JSONBin)
 // Utilisé quand on pré-remplit un formulaire depuis une demande
-// pour éviter un conflit de SHA avec le push qui suit juste après.
 function saveLocalOnly(){
   recomputeNid();
   try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
 }
 
-function saveGhCfg(){
-  try{localStorage.setItem(GK,JSON.stringify(ghCfg))}catch(e){}
+function saveJbCfg(){
+  try{localStorage.setItem(JB_CFG_KEY,JSON.stringify(jbCfg))}catch(e){}
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1031,9 +1033,10 @@ function openAdmin(){
   renderAdmRequests();
   renderAdmApprovedList();
   renderApprovedReqSelectors();
-  // GitHub tab: token only
-  document.getElementById('gh-token').value=ghCfg.token||'';
-  ghUpdateConfigInfo();
+  // JSONBin tab
+  document.getElementById('jb-bin').value=jbCfg.bin||'';
+  document.getElementById('jb-key').value=jbCfg.key||'';
+  document.getElementById('gh-status').textContent='';
 }
 function closeAdmin(){document.getElementById('admin-overlay').classList.remove('open')}
 
@@ -1348,7 +1351,7 @@ function importFromApproved(prefix){
     addMediaRow(prefix,{type,url,caption:cap,portrait:i===0&&type==='image'});
   });
   req.usedAt=new Date().toLocaleDateString('fr-FR');
-  saveLocalOnly(); // Pas de push GitHub ici — le push se fait à l'enregistrement de la fiche
+  saveLocalOnly(); // Pas de push JSONBin ici — le push se fait à l'enregistrement
   renderAdmApprovedList();
   toast('Informations importées — vérifiez puis enregistrez');
 }
@@ -1386,73 +1389,49 @@ function rejectRequest(id){
 }
 
 // ── GITHUB SYNC ─────────────────────────────────────────────
-// Pousse silencieusement les données à chaque sauvegarde admin.
-// Un seul push à la fois : si un push est déjà en cours on l'annule et
-// on attend qu'il finisse avant d'en démarrer un nouveau avec les données les plus récentes.
-let _pushPending=false;
-let _pushTimer=null;
-function ghAutoPush(){
-  // Debounce : regroupe les appels rapprochés (ex: importFromApproved + saveEnemy)
-  // en un seul push 300ms après le dernier appel.
-  clearTimeout(_pushTimer);
-  _pushTimer=setTimeout(()=>_ghDoPush(3),300);
-}
-async function _ghDoPush(retries){
-  if(!GH_CONFIGURED()||!ghCfg.token)return;
-  if(_pushPending){
-    // Un push est déjà en vol — on remet en attente pour repartir après
-    clearTimeout(_pushTimer);
-    _pushTimer=setTimeout(()=>_ghDoPush(retries),500);
-    return;
-  }
-  _pushPending=true;
-  setSyncBadge('⟳ Sauvegarde…','loading');
-  // Snapshot des données au moment du push (pas de mutation entre-temps)
-  const snapshot=JSON.parse(JSON.stringify(data));
-  try{
-    const headers={'Authorization':`token ${ghCfg.token}`,'Content-Type':'application/json'};
-    // Toujours récupérer un SHA frais — jamais de cache
-    let sha;
-    try{
-      const r=await fetch(GH_API_URL(),{headers,cache:'no-store'});
-      if(r.ok){
-        const j=await r.json();
-        sha=j.sha;
-        // Fusionne les demandes ajoutées entre-temps par le bot Discord
-        try{
-          const remote=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
-          mergeRemoteRequests(remote);
-          // Re-snapshot après merge pour inclure les nouvelles demandes du bot
-          Object.assign(snapshot, {requests:data.requests, requestsApproved:data.requestsApproved, nid:data.nid});
-        }catch(e){}
-      }
-    }catch(e){}
-    const fileContent=btoa(unescape(encodeURIComponent(JSON.stringify(snapshot,null,2))));
-    const res=await fetch(GH_API_URL(),{method:'PUT',headers,body:JSON.stringify({message:'Update Bingo Book',content:fileContent,branch:GH_BRANCH,...(sha&&{sha})})});
-    if(res.ok){
-      setSyncBadge('✓ Sync GitHub','ok',3000);
-      try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
-      _pushPending=false;return;
-    }
-    if((res.status===409||res.status===422)&&retries>0){
-      // SHA périmé : un autre push a eu lieu entre-temps → on retente immédiatement
-      _pushPending=false;
-      await new Promise(r=>setTimeout(r,300));
-      return _ghDoPush(retries-1);
-    }
-    const j=await res.json().catch(()=>({}));
-    setSyncBadge('✗ '+(j.message||res.status),'err',6000);
-    toast('⚠ Échec sauvegarde GitHub : '+(j.message||res.status)+' — réessayez 🔄');
-  }catch(e){
-    setSyncBadge('✗ Erreur réseau','err',6000);
-    toast('⚠ Erreur réseau — sauvegarde GitHub échouée, réessayez');
-  }
-  _pushPending=false;
+// Pousse silencieusement les données à chaque sauvegarde admin
+// ══════════════════════════════════════════════════════════════
+//  JSONBIN.IO — Sync sans conflit, multi-admin safe
+// ══════════════════════════════════════════════════════════════
+
+// Debounce push : regroupe les saves rapprochés en un seul appel réseau
+let _jbTimer=null;
+function jbPush(){
+  clearTimeout(_jbTimer);
+  _jbTimer=setTimeout(()=>_jbDoPush(),400);
 }
 
-// Fusionne les demandes (requests/requestsApproved/nid) présentes sur GitHub
-// mais absentes localement (ex: ajoutées par le bot Discord depuis le dernier chargement),
-// pour éviter qu'un push local ne les efface.
+async function _jbDoPush(){
+  if(!JB_CONFIGURED())return;
+  setSyncBadge('⟳ Sauvegarde…','loading');
+  try{
+    // 1. Récupérer d'abord les données distantes pour merger les demandes du bot
+    const getRes=await fetch(JB_LATEST(),{headers:JB_HEADERS(),cache:'no-store'});
+    if(getRes.ok){
+      const j=(await getRes.json()).record||{};
+      mergeRemoteRequests(j);  // intègre les demandes Discord arrivées entre-temps
+    }
+    // 2. Pousser les données fusionnées (PUT = remplacement atomique, pas de SHA)
+    const putRes=await fetch(JB_URL(),{
+      method:'PUT',
+      headers:JB_HEADERS(),
+      body:JSON.stringify(data)
+    });
+    if(putRes.ok){
+      setSyncBadge('✓ Sync','ok',3000);
+      try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
+    }else{
+      const err=await putRes.json().catch(()=>({}));
+      setSyncBadge('✗ '+(err.message||putRes.status),'err',6000);
+      toast('⚠ Échec sauvegarde : '+(err.message||putRes.status)+' — réessayez 🔄');
+    }
+  }catch(e){
+    setSyncBadge('✗ Erreur réseau','err',6000);
+    toast('⚠ Erreur réseau — sauvegarde échouée, réessayez');
+  }
+}
+
+// Fusionne les demandes distantes (bot Discord) sans écraser les décisions locales
 function mergeRemoteRequests(remote){
   if(!remote)return;
   const approvedIds=new Set((data.requestsApproved||[]).map(r=>r.id));
@@ -1465,18 +1444,19 @@ function mergeRemoteRequests(remote){
   for(const r of (remote.requestsApproved||[])){
     if(!localIds.has(r.id)){data.requestsApproved.push(r);localIds.add(r.id);added=true}
   }
-  if(remote.nid>data.nid)data.nid=remote.nid;
-  if(added){renderAdmRequests();renderAdmApprovedList&&renderAdmApprovedList();renderApprovedReqSelectors&&renderApprovedReqSelectors()}
+  if(remote.nid&&remote.nid>data.nid)data.nid=remote.nid;
+  if(added){renderAdmRequests&&renderAdmRequests();renderAdmApprovedList&&renderAdmApprovedList();renderApprovedReqSelectors&&renderApprovedReqSelectors()}
 }
 
 // Actualisation manuelle (bouton 🔄)
 async function manualRefresh(){
-  if(!GH_CONFIGURED()){toast('GitHub non configuré');return}
+  if(!jbCfg.bin){toast('JSONBin non configuré');return}
   setSyncBadge('⟳ Actualisation…','loading');
   try{
-    const res=await fetch(GH_RAW_URL());
+    const headers = jbCfg.key ? {'X-Master-Key':jbCfg.key} : {};
+    const res=await fetch(JB_PUBLIC_URL(),{headers,cache:'no-store'});
     if(!res.ok){setSyncBadge('✗ Échec ('+res.status+')','err',3000);return}
-    const j=await res.json();
+    const j=(await res.json()).record||await res.json().catch(()=>({}));
     if(j&&j.book&&j.clans){
       const localApproved=data.requestsApproved||[];
       const localApprovedIds=new Set(localApproved.map(r=>r.id));
@@ -1489,38 +1469,33 @@ async function manualRefresh(){
   }catch(e){setSyncBadge('✗ Hors ligne','err',3000)}
 }
 
-// Sauvegarde uniquement le token (appelé depuis l'admin)
-function ghSaveToken(){
-  ghCfg.token=document.getElementById('gh-token').value.trim();
-  saveGhCfg();toast('Token sauvegardé');
-  ghUpdateConfigInfo();
+// Sauvegarde la config JSONBin (bin + key) depuis le panneau admin
+function jbSaveConfig(){
+  jbCfg.bin=document.getElementById('jb-bin').value.trim();
+  jbCfg.key=document.getElementById('jb-key').value.trim();
+  saveJbCfg();
+  const setS=(msg,ok)=>{const el=document.getElementById('gh-status');el.className='gh-status '+(ok?'gh-ok':'gh-err');el.textContent=msg};
+  setS('✓ Configuration sauvegardée',true);
+  toast('Config JSONBin sauvegardée');
 }
 
-// Test de connexion depuis l'admin
-async function ghTestConnection(){
-  const token=document.getElementById('gh-token').value.trim()||ghCfg.token;
-  const ghSt=el=>document.getElementById('gh-status').className='gh-status '+(el.ok?'gh-ok':'gh-err')+(document.getElementById('gh-status').className=' gh-status '+(el.ok?'gh-ok':'gh-err'),'');
+// Test de connexion
+async function jbTest(){
+  const bin=document.getElementById('jb-bin').value.trim()||jbCfg.bin;
+  const key=document.getElementById('jb-key').value.trim()||jbCfg.key;
   const setS=(msg,ok)=>{const el=document.getElementById('gh-status');el.className='gh-status '+(ok?'gh-ok':'gh-err');el.textContent=msg};
-  if(!GH_CONFIGURED()){setS('⚠ GH_USER / GH_REPO non configurés dans le fichier HTML',false);return}
+  if(!bin||!key){setS('⚠ Renseignez le Bin ID et la Secret Key',false);return}
   setS('Test en cours…',true);
   try{
-    const res=await fetch(GH_API_URL(),{headers:{'Authorization':`token ${token}`}});
-    if(res.ok){setS('✓ Connexion réussie — token valide !',true)}
-    else if(res.status===404){setS(`✗ Fichier "${GH_FILE}" introuvable dans ${GH_USER}/${GH_REPO}`,false)}
-    else if(res.status===401){setS('✗ Token invalide ou expiré',false)}
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${bin}/latest`,{headers:{'X-Master-Key':key},cache:'no-store'});
+    if(res.ok){setS('✓ Connexion réussie — JSONBin opérationnel !',true)}
+    else if(res.status===401){setS('✗ Secret Key invalide',false)}
+    else if(res.status===404){setS('✗ Bin ID introuvable',false)}
     else{setS('✗ Erreur '+res.status,false)}
   }catch(e){setS('✗ Erreur réseau: '+e.message,false)}
 }
 
-function ghUpdateConfigInfo(){
-  const el=document.getElementById('gh-config-info');
-  if(!el)return;
-  if(GH_CONFIGURED()){
-    el.innerHTML=`Repo : <strong style="color:rgba(200,150,12,.9)">${GH_USER}/${GH_REPO}</strong> · Fichier : <strong style="color:rgba(200,150,12,.9)">${GH_FILE}</strong> · Token : <strong style="color:${ghCfg.token?'#88ee88':'#ff8888'}">${ghCfg.token?'✓ configuré':'✗ non configuré'}</strong>`;
-  }else{
-    el.innerHTML='<span style="color:#ff8888">⚠ GH_USER et GH_REPO non encore renseignés dans le fichier HTML.</span>';
-  }
-}
+// (fonction GH supprimée)
 
 // ── SYNC BADGE ─────────────────────────────────────────────
 let syncBadgeTimer;
