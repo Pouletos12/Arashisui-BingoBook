@@ -556,7 +556,7 @@ const GH_RAW_URL    = ()=> GH_CONFIGURED()
   ? `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?t=${Date.now()}`
   : null;
 const GH_API_URL    = ()=> GH_CONFIGURED()
-  ? `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`
+  ? `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`
   : null;
 
 const RANKS = [
@@ -1319,7 +1319,8 @@ function importFromApproved(prefix){
     const url=typeof p==='string'?p:p.url;
     if(!url)return;
     const type=(typeof p==='object'&&p.type)?p.type:(isYT(url)||/\.(mp4|webm|mov)(\?|$)/i.test(url)?'video':'image');
-    addMediaRow(prefix,{type,url,caption:`Preuve — demande de ${req.by}`,portrait:i===0&&type==='image'});
+    const cap=(typeof p==='object'&&p.caption)?p.caption:`Preuve — demande de ${req.by}`;
+    addMediaRow(prefix,{type,url,caption:cap,portrait:i===0&&type==='image'});
   });
   req.usedAt=new Date().toLocaleDateString('fr-FR');
   saveData();renderAdmApprovedList();
@@ -1360,18 +1361,30 @@ function rejectRequest(id){
 
 // ── GITHUB SYNC ─────────────────────────────────────────────
 // Pousse silencieusement les données à chaque sauvegarde admin
-async function ghAutoPush(){
+async function ghAutoPush(retries){
   if(!GH_CONFIGURED()||!ghCfg.token)return;
+  retries=retries===undefined?3:retries;
   setSyncBadge('⟳ Sauvegarde…','loading');
   try{
     const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
     const headers={'Authorization':`token ${ghCfg.token}`,'Content-Type':'application/json'};
     let sha;
     try{const r=await fetch(GH_API_URL(),{headers});if(r.ok){const j=await r.json();sha=j.sha}}catch(e){}
-    const res=await fetch(GH_API_URL(),{method:'PUT',headers,body:JSON.stringify({message:'Update Bingo Book',content,...(sha&&{sha})})});
-    if(res.ok){setSyncBadge('✓ Sync GitHub','ok',3000)}
-    else{const j=await res.json();setSyncBadge('✗ '+(j.message||res.status),'err',4000)}
-  }catch(e){setSyncBadge('✗ Erreur réseau','err',4000)}
+    const res=await fetch(GH_API_URL(),{method:'PUT',headers,body:JSON.stringify({message:'Update Bingo Book',content,branch:GH_BRANCH,...(sha&&{sha})})});
+    if(res.ok){setSyncBadge('✓ Sync GitHub','ok',3000);return}
+    if(res.status===409&&retries>0){
+      // Conflit de version : un autre admin a modifié le fichier entre-temps.
+      // On retente avec le sha le plus récent.
+      await new Promise(r=>setTimeout(r,400));
+      return ghAutoPush(retries-1);
+    }
+    const j=await res.json().catch(()=>({}));
+    setSyncBadge('✗ '+(j.message||res.status),'err',6000);
+    toast('⚠ Échec sauvegarde GitHub : '+(j.message||res.status)+' — vos changements ne sont PAS encore en ligne, réessayez 🔄');
+  }catch(e){
+    setSyncBadge('✗ Erreur réseau','err',6000);
+    toast('⚠ Erreur réseau — sauvegarde GitHub échouée, réessayez');
+  }
 }
 
 // Actualisation manuelle (bouton 🔄)
