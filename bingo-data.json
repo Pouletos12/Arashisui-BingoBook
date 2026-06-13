@@ -63,28 +63,6 @@
   },
   "requests": [
     {
-      "target": "jojo",
-      "rank": 1,
-      "type": "ennemi",
-      "reason": "test",
-      "proof": "",
-      "by": "jojolerigolo",
-      "date": "12/06/2026",
-      "status": "PENDING",
-      "id": 2012
-    },
-    {
-      "target": "Tesst",
-      "rank": 1,
-      "type": "ennemi",
-      "reason": "Test",
-      "proof": "",
-      "by": "Darkheler5",
-      "date": "12/06/2026",
-      "status": "PENDING",
-      "id": 2013
-    },
-    {
       "target": "TEST",
       "rank": 14,
       "type": "ennemi",
