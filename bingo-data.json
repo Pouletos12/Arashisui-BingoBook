@@ -24,20 +24,7 @@
       {
         "id": 2005,
         "name": "👑 Menaces Légendaires",
-        "entries": [
-          {
-            "id": 2017,
-            "name": "qdcs",
-            "rank": 6,
-            "status": "ACTIF",
-            "village": "",
-            "bounty": "qsdc",
-            "desc": "asc",
-            "media": [],
-            "updatedAt": "13/06/2026",
-            "createdAt": "13/06/2026"
-          }
-        ]
+        "entries": []
       }
     ]
   },
@@ -45,17 +32,6 @@
     "chapters": []
   },
   "requests": [
-    {
-      "target": "jojo",
-      "rank": 1,
-      "type": "ennemi",
-      "reason": "test",
-      "proof": "",
-      "by": "jojolerigolo",
-      "date": "12/06/2026",
-      "status": "PENDING",
-      "id": 2012
-    },
     {
       "target": "Tesst",
       "rank": 1,
