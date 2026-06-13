@@ -133,6 +133,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .ec-thumb .vid-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);color:#fff;font-size:.8rem}
 
 .ec-bounty{margin-top:4px;font-family:'Cinzel',serif;font-size:.6rem;color:#8b0000;text-align:right;padding-top:4px;border-top:1px solid rgba(50,20,0,.12)}
+.ec-dates{font-size:.52rem;color:rgba(50,20,0,.35);text-align:right;font-family:'Cinzel',serif;letter-spacing:.05em;margin-top:2px}
 .ec-wanted{position:absolute;bottom:44px;right:9px;transform:rotate(-12deg);border:2px solid rgba(170,0,0,.55);padding:2px 6px;font-family:'Cinzel',serif;font-size:.52rem;color:rgba(170,0,0,.55);letter-spacing:.2em;text-transform:uppercase}
 
 /* Clan specific */
@@ -298,6 +299,7 @@ select.ap-in option{background:#0a0a16}
     <button class="vtab on" id="vt-book" onclick="switchView('book')">📖 BINGO BOOK</button>
     <button class="vtab" id="vt-clans" onclick="switchView('clans')">⚔️ BINGO CLANS</button>
     <button class="vtab" id="vt-demandes" onclick="switchView('demandes')">📝 DEMANDES</button>
+    <button class="vtab" id="vt-approuvees" onclick="switchView('approuvees')">✅ DEMANDES APPROUVÉES</button>
   </div>
 
   <!-- BOOK -->
@@ -336,10 +338,14 @@ select.ap-in option{background:#0a0a16}
           </div>
         </div>
         <label class="dem-lbl">TYPE DE SIGNALEMENT</label>
-        <select class="dem-in" id="dq-type" onchange="updateDemandeRankOptions()">
+        <select class="dem-in" id="dq-type">
           <option value="ennemi">Ennemi individuel (Bingo Book)</option>
           <option value="clan">Clan dangereux (Bingo Clans)</option>
         </select>
+        <div class="dem-2">
+          <div><label class="dem-lbl">CLAN / ÉQUIPE</label><input class="dem-in" id="dq-clan" type="text" placeholder="Optionnel"></div>
+          <div><label class="dem-lbl">PRIME POTENTIELLE</label><input class="dem-in" id="dq-bounty" type="text" placeholder="Ex: 10,000 ryō"></div>
+        </div>
         <label class="dem-lbl">RAISON / PREUVES</label>
         <textarea class="dem-in" id="dq-reason" placeholder="Décrivez les crimes, menaces ou comportements dangereux..."></textarea>
         <label class="dem-lbl">LIEN PREUVE (screenshot / vidéo)</label>
@@ -352,6 +358,17 @@ select.ap-in option{background:#0a0a16}
           <div class="req-h">DEMANDES EN COURS</div>
           <div id="pub-req-list"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMANDES APPROUVÉES -->
+  <div id="approuvees-view" style="display:none">
+    <div class="demande-scroll">
+      <div class="dscroll-inner">
+        <div class="dem-title">DEMANDES APPROUVÉES</div>
+        <div class="dem-sub">Cibles validées par les modérateurs — en attente d'ajout au registre</div>
+        <div id="approved-req-list"></div>
       </div>
     </div>
   </div>
@@ -395,7 +412,6 @@ select.ap-in option{background:#0a0a16}
       <button class="tab on" id="tb-e"  onclick="switchTab('e')">ENNEMIS</button>
       <button class="tab"    id="tb-cl" onclick="switchTab('cl')">CLANS</button>
       <button class="tab"    id="tb-ch" onclick="switchTab('ch')">CHAPITRES</button>
-      <button class="tab"    id="tb-rk" onclick="switchTab('rk')">RANGS</button>
       <button class="tab"    id="tb-dq" onclick="switchTab('dq')">DEMANDES</button>
       <button class="tab"    id="tb-gh" onclick="switchTab('gh')">GITHUB</button>
     </div>
@@ -407,6 +423,13 @@ select.ap-in option{background:#0a0a16}
       <div id="elist"></div>
       <div class="ap-hr"></div>
       <div class="ap-sec" id="ef-ttl">AJOUTER UN ENNEMI</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;align-items:flex-end">
+        <div style="flex:1">
+          <label class="ap-lbl">IMPORTER DEPUIS UNE DEMANDE APPROUVÉE</label>
+          <select class="ap-in" id="ef-import-sel" style="margin-bottom:0"></select>
+        </div>
+        <button class="btn btn-green" style="white-space:nowrap" onclick="importFromApproved('ef')">⇩ IMPORTER</button>
+      </div>
       <input type="hidden" id="ef-id">
       <label class="ap-lbl">NOM EN JEU</label><input class="ap-in" id="ef-nm" type="text" placeholder="Nom du joueur">
       <div class="ap-3">
@@ -432,6 +455,13 @@ select.ap-in option{background:#0a0a16}
       <div id="cllist"></div>
       <div class="ap-hr"></div>
       <div class="ap-sec" id="clf-ttl">AJOUTER UN CLAN</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;align-items:flex-end">
+        <div style="flex:1">
+          <label class="ap-lbl">IMPORTER DEPUIS UNE DEMANDE APPROUVÉE</label>
+          <select class="ap-in" id="clf-import-sel" style="margin-bottom:0"></select>
+        </div>
+        <button class="btn btn-green" style="white-space:nowrap" onclick="importFromApproved('clf')">⇩ IMPORTER</button>
+      </div>
       <input type="hidden" id="clf-id">
       <label class="ap-lbl">NOM DU CLAN</label><input class="ap-in" id="clf-nm" type="text" placeholder="Nom du clan">
       <div class="ap-3">
@@ -470,34 +500,13 @@ select.ap-in option{background:#0a0a16}
       </div>
     </div>
 
-    <!-- TAB: RANGS -->
-    <div id="tab-rk" style="display:none">
-      <div style="display:flex;gap:4px;margin-bottom:14px">
-        <button class="ch-sel on" id="rks-book" onclick="switchRkTab('book')">RANGS ENNEMIS</button>
-        <button class="ch-sel" id="rks-clans" onclick="switchRkTab('clans')">RANGS CLANS</button>
-      </div>
-      <div id="rk-list"></div>
-      <div class="ap-hr"></div>
-      <div class="ap-sec" id="rkf-ttl">AJOUTER UN RANG</div>
-      <input type="hidden" id="rkf-id">
-      <div class="ap-3">
-        <div><label class="ap-lbl">NUMÉRO</label><input class="ap-in" id="rkf-n" type="number" min="0" placeholder="Ex: 15"></div>
-        <div style="grid-column:span 2"><label class="ap-lbl">NOM DU RANG</label><input class="ap-in" id="rkf-lbl" type="text" placeholder="Ex: Légende Vivante"></div>
-      </div>
-      <label class="ap-lbl">COULEUR</label>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <input id="rkf-color" type="color" value="#8b0000" style="width:48px;height:34px;border:1px solid rgba(200,150,12,.2);background:transparent;cursor:pointer">
-        <input class="ap-in" id="rkf-color-txt" type="text" placeholder="#8b0000" style="margin-bottom:0" oninput="syncColorTxt(this.value)">
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button class="btn btn-g" onclick="cancelRank()">ANNULER</button>
-        <button class="btn btn-p" onclick="saveRank()">ENREGISTRER</button>
-      </div>
-    </div>
-
     <!-- TAB: DEMANDES -->
     <div id="tab-dq" style="display:none">
+      <div class="ap-sec">DEMANDES EN ATTENTE</div>
       <div id="adm-req-list"></div>
+      <div class="ap-hr"></div>
+      <div class="ap-sec">DEMANDES APPROUVÉES (à transformer en fiche)</div>
+      <div id="adm-approved-list"></div>
     </div>
 
     <!-- TAB: GITHUB -->
@@ -518,12 +527,6 @@ select.ap-in option{background:#0a0a16}
         <button class="btn btn-g" onclick="ghTestConnection()">TESTER LA CONNEXION</button>
         <button class="btn btn-green" onclick="ghSaveToken()">SAUVEGARDER LE TOKEN</button>
       </div>
-      <div class="gh-note" style="margin-top:14px">
-        <strong>🤖 Bot Discord (optionnel) :</strong><br>
-        Un bot Discord peut lire les demandes postées sur votre serveur (via un salon ou un formulaire/modal) et les ajouter automatiquement dans <code>data.requests</code> du fichier <code>bingo-data.json</code> sur GitHub, en utilisant la même API GitHub (PUT contents) avec son propre token.<br><br>
-        Une fois ajoutées par le bot, les demandes apparaissent automatiquement ici (onglet DEMANDES, public + admin) au prochain chargement / actualisation — aucune autre configuration nécessaire côté site.<br><br>
-        <span style="opacity:.7">Format attendu par entrée : {id, target, rank, type:"ennemi"|"clan", reason, proof, by, date, status:"PENDING"}</span>
-      </div>
     </div>
 
   </div>
@@ -543,8 +546,8 @@ const PWD = 'bloodlines';
 // ║  CONFIG GITHUB — MODIFIER CES 4 LIGNES UNE SEULE FOIS   ║
 // ║  (dans l'éditeur GitHub web, ou localement)              ║
 // ╚══════════════════════════════════════════════════════════╝
-const GH_USER   = 'Pouletos12';               // ex: 'MonPseudo'
-const GH_REPO   = 'Arashisui-BingoBook';               // ex: 'bloodlines-bingo'
+const GH_USER   = '';               // ex: 'MonPseudo'
+const GH_REPO   = '';               // ex: 'bloodlines-bingo'
 const GH_BRANCH = 'main';
 const GH_FILE   = 'bingo-data.json';
 
@@ -556,7 +559,7 @@ const GH_API_URL    = ()=> GH_CONFIGURED()
   ? `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`
   : null;
 
-const DEFAULT_RANKS_BOOK = [
+const RANKS = [
   {n:1,  label:'Genin',                color:'#3a6e3a'},
   {n:2,  label:'Genin Expérimenté',    color:'#2a5e2a'},
   {n:3,  label:'Chūnin',               color:'#5e5e00'},
@@ -573,27 +576,12 @@ const DEFAULT_RANKS_BOOK = [
   {n:14, label:'Légende BingoBook',    color:'#8b0000'},
 ];
 
-const DEFAULT_RANKS_CLANS = [
-  {n:1,  label:'Clan Mineur',          color:'#3a6e3a'},
-  {n:2,  label:'Clan Établi',          color:'#2a5e2a'},
-  {n:3,  label:'Clan Influent',        color:'#5e5e00'},
-  {n:4,  label:'Clan Renégat',         color:'#6e4800'},
-  {n:5,  label:'Clan Majeur',          color:'#003878'},
-  {n:6,  label:"Clan d'Élite",         color:'#3a0068'},
-  {n:7,  label:'Organisation S-Rank',  color:'#8b0000'},
-  {n:8,  label:'Menace Légendaire',    color:'#450045'},
-];
-
-// Rangs courants (depuis data.ranksBook / data.ranksClans une fois chargés)
-function ranksFor(isClan){return isClan?(data.ranksClans||DEFAULT_RANKS_CLANS):(data.ranksBook||DEFAULT_RANKS_BOOK)}
-function rankInfo(n,isClan){const list=ranksFor(isClan);return list.find(r=>r.n===+n)||list[0]||{n:0,label:'?',color:'#666'}}
+function rankInfo(n){return RANKS.find(r=>r.n===+n)||RANKS[0]}
 
 // ══════════════════════════════════════════════════════════════
 //  DEFAULT DATA
 // ══════════════════════════════════════════════════════════════
 const DEFAULT = {
-  ranksBook: JSON.parse(JSON.stringify(DEFAULT_RANKS_BOOK)),
-  ranksClans: JSON.parse(JSON.stringify(DEFAULT_RANKS_CLANS)),
   book:{chapters:[
     {id:1,name:'Genin & Chunin — Criminels Débutants',entries:[
       {id:101,name:'Mizuki',village:'Konohagakure',rank:3,status:'NEUTRALISE',bounty:'1,000,000 ryō',desc:"Traître de Konoha. Voleur du Parchemin des Sceaux. Se transforme en tigre géant sous malédiction.",media:[]},
@@ -610,6 +598,7 @@ const DEFAULT = {
     ]}
   ]},
   requests:[],
+  requestsApproved:[],
   nid:2000
 };
 
@@ -635,7 +624,7 @@ async function loadData(){
   // 1. Charge localStorage (affichage instantané)
   try{const s=localStorage.getItem(SK);if(s)data=JSON.parse(s)}catch(e){}
   try{const g=localStorage.getItem(GK);if(g)ghCfg=JSON.parse(g)}catch(e){}
-  ensureRanks();
+  ensureData();
 
   // 2. Si GitHub configuré → fetch en arrière-plan, sans token (repo public)
   if(GH_CONFIGURED()){
@@ -646,7 +635,7 @@ async function loadData(){
         const j=await res.json();
         if(j&&j.book&&j.clans){
           data=j;
-          ensureRanks();
+          ensureData();
           try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
           setSyncBadge('✓ À jour','ok',2500);
         }else{setSyncBadge('⚠ Données invalides','err',3000)}
@@ -655,10 +644,17 @@ async function loadData(){
   }
 }
 
-// Ajoute les listes de rangs par défaut si absentes (compat anciennes données)
-function ensureRanks(){
-  if(!data.ranksBook||!data.ranksBook.length)data.ranksBook=JSON.parse(JSON.stringify(DEFAULT_RANKS_BOOK));
-  if(!data.ranksClans||!data.ranksClans.length)data.ranksClans=JSON.parse(JSON.stringify(DEFAULT_RANKS_CLANS));
+// Compat anciennes données : ajoute les champs manquants sans rien casser
+function ensureData(){
+  if(!data.requests)data.requests=[];
+  if(!data.requestsApproved)data.requestsApproved=[];
+  // migre les anciennes demandes déjà marquées APPROUVE vers la nouvelle liste
+  const stillPending=[];
+  for(const r of data.requests){
+    if(r.status==='APPROUVE')data.requestsApproved.push(r);
+    else stillPending.push(r);
+  }
+  data.requests=stillPending;
 }
 
 function saveData(){
@@ -684,27 +680,18 @@ function ytEmbed(url){const m=url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)
 function getPortrait(media){if(!media||!media.length)return null;const p=media.find(m=>m.portrait&&m.type==='image');if(p)return p;return media.find(m=>m.type==='image')||null}
 function getGallery(media,portItem){if(!media)return[];return media.filter(m=>m!==portItem)}
 
-function rankBadgeHTML(rank,isClan){
-  const r=rankInfo(rank,isClan);
+function rankBadgeHTML(rank){
+  const r=rankInfo(rank);
   return`<div class="ec-rank-badge" style="background:${r.color}" title="${esc(r.label)}">${esc(r.n)}</div>`;
 }
 
-// populate rank selects (ennemis = ranksBook, clans = ranksClans)
+// populate rank selects
 function populateRankSelects(){
-  const optsBook=ranksFor(false).map(r=>`<option value="${r.n}">${r.n} — ${r.label}</option>`).join('');
-  const optsClans=ranksFor(true).map(r=>`<option value="${r.n}">${r.n} — ${r.label}</option>`).join('');
-  const efrk=document.getElementById('ef-rk');if(efrk)efrk.innerHTML=optsBook;
-  const clfrk=document.getElementById('clf-rk');if(clfrk)clfrk.innerHTML=optsClans;
-  // Demandes dropdown: dépend du type sélectionné
-  updateDemandeRankOptions();
-}
-function updateDemandeRankOptions(){
+  const opts=RANKS.map(r=>`<option value="${r.n}">${r.n} — ${r.label}</option>`).join('');
+  ['ef-rk','clf-rk'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts});
+  // Demandes dropdown
   const dq=document.getElementById('dq-rank');
-  const typeEl=document.getElementById('dq-type');
-  if(!dq||!typeEl)return;
-  const isClan=typeEl.value==='clan';
-  const opts=ranksFor(isClan).map(r=>`<option value="${r.n}">${r.n} — ${r.label}</option>`).join('');
-  dq.innerHTML=`<option value="">— Sélectionner —</option>`+opts;
+  if(dq)dq.innerHTML=`<option value="">— Sélectionner —</option>`+opts;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -730,10 +717,10 @@ function mkTOC(chapters){
   return`<div><div class="toc-h">TABLE DES MATIÈRES</div>${rows||'<div class="empty-lbl">Aucune entrée</div>'}</div>`;
 }
 
-function mkRanksPage(isClans){
+function mkRanksPage(){
   return`<div class="ct-ranks">
     <div class="rk-title">Hiérarchie des Rangs</div>
-    ${ranksFor(isClans).map(r=>`<div class="rk-row">
+    ${RANKS.map(r=>`<div class="rk-row">
       <div class="rk-dot" style="background:${r.color}">${r.n}</div>
       <div class="rk-lbl">${r.label}</div>
     </div>`).join('')}
@@ -750,7 +737,7 @@ function mkChapterHeader(ch,idx){
 }
 
 function mkEntryCard(entry, isClan){
-  const rk=rankInfo(entry.rank,isClan);
+  const rk=rankInfo(entry.rank);
   const portrait=getPortrait(entry.media);
   const gallery=getGallery(entry.media, portrait);
   const photo=portrait
@@ -764,29 +751,32 @@ function mkEntryCard(entry, isClan){
   }).join('')}</div>`:'';
 
   const galleryAttr=gallery.length?`onclick="openLB(${JSON.stringify(entry.media).replace(/"/g,'&quot;')},0)"` :'';
+  const datesHTML=(entry.createdAt||entry.updatedAt)?`<div class="ec-dates">${entry.createdAt?'Créée: '+esc(entry.createdAt):''}${entry.updatedAt&&entry.updatedAt!==entry.createdAt?' · MàJ: '+esc(entry.updatedAt):''}</div>`:'';
 
   if(isClan){
     return`<div class="ct-card">
       <div class="ec-stamp ${esc(entry.status)}">${esc(entry.status)}</div>
       <div class="ec-photo" ${portrait&&gallery.length?galleryAttr:''}>${photo}
-        ${rankBadgeHTML(entry.rank,true)}
+        ${rankBadgeHTML(entry.rank)}
         <div class="ec-clan-badge">⚔ ${esc(entry.members||'?')} mbr</div>
       </div>
       <div class="ec-name">${esc(entry.name)}</div>
       <div class="ec-sub">Chef: ${esc(entry.leader||'—')} · ${esc(entry.alliance||'Indépendant')}</div>
       <div class="ec-desc">${esc(entry.desc)}</div>
       ${galleryHTML}
+      ${datesHTML}
       <div class="ec-wanted">CLAN DANGEREUX</div>
     </div>`;
   }
 
   return`<div class="ct-card">
     <div class="ec-stamp ${esc(entry.status)}">${esc(entry.status)}</div>
-    <div class="ec-photo">${photo}${rankBadgeHTML(entry.rank,false)}</div>
+    <div class="ec-photo">${photo}${rankBadgeHTML(entry.rank)}</div>
     <div class="ec-name">${esc(entry.name)}</div>
     <div class="ec-sub">${esc(entry.village||'Village inconnu')}</div>
     <div class="ec-desc">${esc(entry.desc)}</div>
     ${galleryHTML}
+    ${datesHTML}
     <div class="ec-bounty">⟨ ${esc(entry.bounty||'—')} ⟩</div>
     <div class="ec-wanted">RECHERCHÉ</div>
   </div>`;
@@ -805,7 +795,7 @@ function buildSpreads(){
   // Spread 0: cover
   spreads.push({L:mkBlank(),R:mkCoverPage(isClans),ln:'',rn:'',chid:null});
   // Spread 1: TOC + Ranks
-  spreads.push({L:mkTOC(src.chapters),R:mkRanksPage(isClans),ln:'I',rn:'II',chid:null});
+  spreads.push({L:mkTOC(src.chapters),R:mkRanksPage(),ln:'I',rn:'II',chid:null});
   let pg=0;
   let ci=0;
   for(const ch of src.chapters){
@@ -902,16 +892,21 @@ function openBook(){
 
 function switchView(v){
   curView=v;
-  ['book','clans','demandes'].forEach(x=>{
+  ['book','clans','demandes','approuvees'].forEach(x=>{
     document.getElementById('vt-'+x).classList.toggle('on',x===v);
   });
   const bookEl=document.getElementById('book-wrap-el');
   const demEl=document.getElementById('demandes-view');
+  const apEl=document.getElementById('approuvees-view');
+  bookEl.style.display='none';demEl.style.display='none';apEl.style.display='none';
   if(v==='demandes'){
-    bookEl.style.display='none';demEl.style.display='';
+    demEl.style.display='';
     renderPublicRequests();
+  }else if(v==='approuvees'){
+    apEl.style.display='';
+    renderApprovedRequests();
   }else{
-    bookEl.style.display='';demEl.style.display='none';
+    bookEl.style.display='';
     cur=0;buildSpreads();renderSpread(0);
   }
 }
@@ -946,6 +941,16 @@ function closeLB(){document.getElementById('lightbox').classList.remove('open');
 // ══════════════════════════════════════════════════════════════
 //  DEMANDES (public)
 // ══════════════════════════════════════════════════════════════
+function renderApprovedRequests(){
+  const el=document.getElementById('approved-req-list');
+  if(!data.requestsApproved||!data.requestsApproved.length){el.innerHTML='<div style="color:rgba(50,20,0,.35);font-size:.75rem;text-align:center;padding:10px">Aucune demande approuvée pour le moment</div>';return}
+  el.innerHTML=data.requestsApproved.slice().reverse().map(r=>`<div class="req-item">
+    <strong>${esc(r.target)}</strong> <span class="req-status APPROUVE">${r.usedAt?'AJOUTÉ AU REGISTRE':'APPROUVÉ'}</span><br>
+    <span style="font-size:.68rem;color:rgba(50,20,0,.5)">Par ${esc(r.by)} · ${esc(r.date)} · ${r.type==='clan'?'Clan':'Ennemi'} · Rang ${esc(r.rank)}</span><br>
+    <span style="font-size:.7rem">${esc(r.reason||'').substring(0,120)}${(r.reason||'').length>120?'…':''}</span>
+  </div>`).join('');
+}
+
 function renderPublicRequests(){
   const el=document.getElementById('pub-req-list');
   if(!data.requests||!data.requests.length){el.innerHTML='<div style="color:rgba(50,20,0,.35);font-size:.75rem;text-align:center;padding:10px">Aucune demande en cours</div>';return}
@@ -962,15 +967,18 @@ function submitDemande(){
   const rankN=parseInt(document.getElementById('dq-rank').value)||1;
   const req={
     id:data.nid++,target,rank:rankN,type:document.getElementById('dq-type').value,
+    clan:document.getElementById('dq-clan').value.trim(),
+    bounty:document.getElementById('dq-bounty').value.trim(),
     reason:document.getElementById('dq-reason').value.trim(),
     proof:document.getElementById('dq-proof').value.trim(),
+    proofs:[],
     by:document.getElementById('dq-by').value.trim()||'Anonyme',
     date:new Date().toLocaleDateString('fr-FR'),status:'PENDING'
   };
   if(!data.requests)data.requests=[];
   data.requests.push(req);
   saveData();
-  ['dq-target','dq-reason','dq-proof','dq-by'].forEach(i=>document.getElementById(i).value='');
+  ['dq-target','dq-clan','dq-bounty','dq-reason','dq-proof','dq-by'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('dq-rank').value='';
   renderPublicRequests();
   toast('Demande soumise — merci !');
@@ -995,8 +1003,9 @@ function openAdmin(){
   renderEChSel();renderEList();
   renderClChSel();renderClList();
   renderChList();
-  renderRkList();
   renderAdmRequests();
+  renderAdmApprovedList();
+  renderApprovedReqSelectors();
   // GitHub tab: token only
   document.getElementById('gh-token').value=ghCfg.token||'';
   ghUpdateConfigInfo();
@@ -1004,7 +1013,7 @@ function openAdmin(){
 function closeAdmin(){document.getElementById('admin-overlay').classList.remove('open')}
 
 function switchTab(t){
-  ['e','cl','ch','rk','dq','gh'].forEach(x=>{
+  ['e','cl','ch','dq','gh'].forEach(x=>{
     document.getElementById('tab-'+x).style.display=x===t?'':'none';
     document.getElementById('tb-'+x).classList.toggle('on',x===t);
   });
@@ -1026,7 +1035,8 @@ function addMediaRow(prefix, item){
       <option value="image" ${type==='image'?'selected':''}>🖼 Image</option>
       <option value="video" ${type==='video'?'selected':''}>🎬 Vidéo</option>
     </select>
-    <input class="media-url ap-in" style="margin-bottom:0" type="text" placeholder="URL…" value="${esc(url)}">
+    <input class="media-url ap-in" style="margin-bottom:0" type="text" placeholder="URL… ou téléversez un fichier image →" value="${esc(url&&url.startsWith('data:')?'':url)}">
+    <input class="media-file" type="file" accept="image/*" style="display:${type==='image'?'block':'none'};max-width:120px;font-size:.62rem;color:rgba(200,150,12,.6)" onchange="handleMediaFile(this)">
     <input class="media-cap ap-in" style="margin-bottom:0;width:100px" type="text" placeholder="Légende" value="${esc(cap)}">
     <label style="display:flex;align-items:center;gap:3px;font-family:Cinzel,serif;font-size:.52rem;color:rgba(200,150,12,.55);white-space:nowrap">
       <input type="checkbox" class="media-portrait-chk" ${port?'checked':''} ${type==='video'?'disabled':''}>Portrait
@@ -1034,7 +1044,32 @@ function addMediaRow(prefix, item){
     <button class="btn btn-s" onclick="moveMedia(this,-1)">↑</button>
     <button class="btn btn-s" onclick="moveMedia(this,1)">↓</button>
     <button class="btn btn-d" onclick="this.closest('.media-row').remove()">✕</button>`;
+  // si l'item a une URL data: (image téléversée), on la stocke dans un data-attribute caché
+  if(url&&url.startsWith('data:')){
+    row.dataset.dataUrl=url;
+    const urlInput=row.querySelector('.media-url');
+    urlInput.value='';
+    urlInput.disabled=true;
+    urlInput.placeholder='✓ Image téléversée (déjà enregistrée)';
+  }
   list.appendChild(row);
+}
+// Téléversement d'image locale (PC ou mobile) → conversion en base64 (data URL)
+function handleMediaFile(input){
+  const file=input.files&&input.files[0];if(!file)return;
+  if(!file.type.startsWith('image/')){toast('Seules les images peuvent être téléversées (vidéos: utilisez un lien URL)');input.value='';return}
+  const MAX=5*1024*1024; // 5 Mo
+  if(file.size>MAX){toast('Image trop lourde (max 5 Mo)');input.value='';return}
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const row=input.closest('.media-row');
+    row.dataset.dataUrl=reader.result;
+    const urlInput=row.querySelector('.media-url');
+    urlInput.value='';
+    urlInput.placeholder='✓ Image téléversée ('+file.name+')';
+    urlInput.disabled=true;
+  };
+  reader.readAsDataURL(file);
 }
 function moveMedia(btn,dir){
   const row=btn.closest('.media-row');
@@ -1048,16 +1083,32 @@ function moveMedia(btn,dir){
 function updateMediaRow(sel){
   const row=sel.closest('.media-row');
   const portChk=row.querySelector('.media-portrait-chk');
+  const fileInput=row.querySelector('.media-file');
+  const urlInput=row.querySelector('.media-url');
   portChk.disabled=(sel.value==='video');
-  if(sel.value==='video')portChk.checked=false;
+  if(sel.value==='video'){
+    portChk.checked=false;
+    fileInput.style.display='none';
+    delete row.dataset.dataUrl;
+    urlInput.disabled=false;
+    urlInput.placeholder='URL (lien direct ou YouTube)…';
+  }else{
+    fileInput.style.display='block';
+    urlInput.placeholder='URL… ou téléversez un fichier image →';
+  }
 }
 function collectMedia(prefix){
-  return Array.from(document.getElementById(prefix+'-media-list').children).map(row=>({
-    type:row.querySelector('.media-type').value,
-    url:row.querySelector('.media-url').value.trim(),
-    caption:row.querySelector('.media-cap').value.trim(),
-    portrait:row.querySelector('.media-portrait-chk').checked
-  })).filter(m=>m.url);
+  return Array.from(document.getElementById(prefix+'-media-list').children).map(row=>{
+    const type=row.querySelector('.media-type').value;
+    const dataUrl=row.dataset.dataUrl;
+    const url=(type==='image'&&dataUrl)?dataUrl:row.querySelector('.media-url').value.trim();
+    return{
+      type,
+      url,
+      caption:row.querySelector('.media-cap').value.trim(),
+      portrait:row.querySelector('.media-portrait-chk').checked
+    };
+  }).filter(m=>m.url);
 }
 function loadMediaRows(prefix, mediaArr){
   const list=document.getElementById(prefix+'-media-list');
@@ -1080,7 +1131,7 @@ function renderEList(){
   if(!selChE){el.innerHTML='';return}
   const ch=data.book.chapters.find(c=>c.id===selChE);
   if(!ch||!ch.entries.length){el.innerHTML='<div class="empty-lbl">Aucun ennemi</div>';return}
-  const rk=n=>rankInfo(n,false);
+  const rk=rankInfo;
   el.innerHTML=ch.entries.map(e=>`<div class="e-item">
     <span class="e-nm">${esc(e.name)}</span>
     <span class="rtag" style="color:${rk(e.rank).color};border-color:${rk(e.rank).color}">${rk(e.rank).n}</span>
@@ -1092,9 +1143,9 @@ function saveEnemy(){
   if(!selChE){toast('Sélectionnez un chapitre');return}
   const nm=document.getElementById('ef-nm').value.trim();if(!nm){toast('Nom requis');return}
   const eid=document.getElementById('ef-id').value;
-  const d={name:nm,rank:+document.getElementById('ef-rk').value||1,status:document.getElementById('ef-st').value,village:document.getElementById('ef-vl').value.trim(),bounty:document.getElementById('ef-bn').value.trim(),desc:document.getElementById('ef-dc').value.trim(),media:collectMedia('ef')};
+  const d={name:nm,rank:+document.getElementById('ef-rk').value||1,status:document.getElementById('ef-st').value,village:document.getElementById('ef-vl').value.trim(),bounty:document.getElementById('ef-bn').value.trim(),desc:document.getElementById('ef-dc').value.trim(),media:collectMedia('ef'),updatedAt:new Date().toLocaleDateString('fr-FR')};
   if(eid){for(const c of data.book.chapters){const e=c.entries.find(x=>x.id===+eid);if(e){Object.assign(e,d);break}}}
-  else{const ch=data.book.chapters.find(c=>c.id===selChE);if(ch)ch.entries.push({id:data.nid++,...d})}
+  else{const ch=data.book.chapters.find(c=>c.id===selChE);if(ch)ch.entries.push({id:data.nid++,...d,createdAt:d.updatedAt})}
   cancelEnemy();saveData();renderEList();toast('Ennemi enregistré');
 }
 function editEnemy(id){
@@ -1113,7 +1164,7 @@ function editEnemy(id){
   }}
 }
 function delEnemy(id){if(!confirm('Supprimer ?'))return;for(const c of data.book.chapters)c.entries=c.entries.filter(e=>e.id!==id);saveData();renderEList();toast('Supprimé')}
-function cancelEnemy(){['ef-id','ef-nm','ef-vl','ef-bn','ef-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('ef-rk').value=ranksFor(false)[0].n;document.getElementById('ef-st').value='ACTIF';document.getElementById('ef-ttl').textContent='AJOUTER UN ENNEMI';document.getElementById('ef-media-list').innerHTML=''}
+function cancelEnemy(){['ef-id','ef-nm','ef-vl','ef-bn','ef-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('ef-rk').value=RANKS[0].n;document.getElementById('ef-st').value='ACTIF';document.getElementById('ef-ttl').textContent='AJOUTER UN ENNEMI';document.getElementById('ef-media-list').innerHTML=''}
 
 // ── CLAN CHAPTER SELECTOR ──────────────────────────────────
 function renderClChSel(){
@@ -1130,7 +1181,7 @@ function renderClList(){
   if(!selChCl){el.innerHTML='';return}
   const ch=data.clans.chapters.find(c=>c.id===selChCl);
   if(!ch||!ch.entries.length){el.innerHTML='<div class="empty-lbl">Aucun clan</div>';return}
-  const rk=n=>rankInfo(n,true);
+  const rk=rankInfo;
   el.innerHTML=ch.entries.map(e=>`<div class="e-item">
     <span class="e-nm">${esc(e.name)}</span>
     <span class="rtag" style="color:${rk(e.rank).color};border-color:${rk(e.rank).color}">${rk(e.rank).n}</span>
@@ -1142,9 +1193,9 @@ function saveClan(){
   if(!selChCl){toast('Sélectionnez un chapitre');return}
   const nm=document.getElementById('clf-nm').value.trim();if(!nm){toast('Nom requis');return}
   const eid=document.getElementById('clf-id').value;
-  const d={name:nm,rank:+document.getElementById('clf-rk').value||1,status:document.getElementById('clf-st').value,alliance:document.getElementById('clf-al').value.trim(),leader:document.getElementById('clf-ld').value.trim(),members:document.getElementById('clf-mb').value.trim(),desc:document.getElementById('clf-dc').value.trim(),media:collectMedia('clf')};
+  const d={name:nm,rank:+document.getElementById('clf-rk').value||1,status:document.getElementById('clf-st').value,alliance:document.getElementById('clf-al').value.trim(),leader:document.getElementById('clf-ld').value.trim(),members:document.getElementById('clf-mb').value.trim(),desc:document.getElementById('clf-dc').value.trim(),media:collectMedia('clf'),updatedAt:new Date().toLocaleDateString('fr-FR')};
   if(eid){for(const c of data.clans.chapters){const e=c.entries.find(x=>x.id===+eid);if(e){Object.assign(e,d);break}}}
-  else{const ch=data.clans.chapters.find(c=>c.id===selChCl);if(ch)ch.entries.push({id:data.nid++,...d})}
+  else{const ch=data.clans.chapters.find(c=>c.id===selChCl);if(ch)ch.entries.push({id:data.nid++,...d,createdAt:d.updatedAt})}
   cancelClan();saveData();renderClList();toast('Clan enregistré');
 }
 function editClan(id){
@@ -1164,7 +1215,7 @@ function editClan(id){
   }}
 }
 function delClan(id){if(!confirm('Supprimer ?'))return;for(const c of data.clans.chapters)c.entries=c.entries.filter(e=>e.id!==id);saveData();renderClList();toast('Supprimé')}
-function cancelClan(){['clf-id','clf-nm','clf-al','clf-ld','clf-mb','clf-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('clf-rk').value=ranksFor(true)[0].n;document.getElementById('clf-st').value='ACTIF';document.getElementById('clf-ttl').textContent='AJOUTER UN CLAN';document.getElementById('clf-media-list').innerHTML=''}
+function cancelClan(){['clf-id','clf-nm','clf-al','clf-ld','clf-mb','clf-dc'].forEach(i=>document.getElementById(i).value='');document.getElementById('clf-rk').value=RANKS[0].n;document.getElementById('clf-st').value='ACTIF';document.getElementById('clf-ttl').textContent='AJOUTER UN CLAN';document.getElementById('clf-media-list').innerHTML=''}
 
 // ── CHAPTERS ───────────────────────────────────────────────
 function switchChTab(t){
@@ -1206,78 +1257,75 @@ function delChap(id){
 }
 function cancelChap(){document.getElementById('cf-id').value='';document.getElementById('cf-nm').value='';document.getElementById('cf-ttl').textContent='AJOUTER UN CHAPITRE'}
 
-// ── RANGS ────────────────────────────────────────────────────
-let curRkTab='book'; // 'book' | 'clans'
-function switchRkTab(t){
-  curRkTab=t;
-  document.getElementById('rks-book').classList.toggle('on',t==='book');
-  document.getElementById('rks-clans').classList.toggle('on',t==='clans');
-  cancelRank();
-  renderRkList();
-}
-function rkArr(){return curRkTab==='book'?data.ranksBook:data.ranksClans}
-function renderRkList(){
-  const arr=rkArr();
-  const el=document.getElementById('rk-list');
-  if(!arr.length){el.innerHTML='<div class="empty-lbl">Aucun rang</div>';return}
-  el.innerHTML=arr.slice().sort((a,b)=>a.n-b.n).map(r=>`<div class="ch-item">
-    <div class="rk-dot" style="background:${r.color};width:22px;height:22px;font-size:.58rem;flex-shrink:0">${r.n}</div>
-    <span class="e-nm">${esc(r.label)}</span>
-    <button class="btn btn-s" onclick="editRank(${r.n})">ÉDITER</button>
-    <button class="btn btn-d" onclick="delRank(${r.n})">SUPPR.</button>
+// ── DEMANDES (admin) ───────────────────────────────────────
+function renderAdmApprovedList(){
+  const el=document.getElementById('adm-approved-list');
+  if(!data.requestsApproved||!data.requestsApproved.length){el.innerHTML='<div class="empty-lbl">Aucune demande approuvée</div>';return}
+  el.innerHTML=data.requestsApproved.slice().reverse().map(r=>`<div class="req-adm-item" style="flex-wrap:wrap;gap:6px">
+    <div style="flex:1;min-width:200px">
+      <strong style="font-family:Cinzel,serif;color:#e8d5a0;font-size:.8rem">${esc(r.target)}</strong>
+      <span class="req-status ${r.usedAt?'APPROUVE':'PENDING'}">${r.usedAt?'FICHE CRÉÉE':'À CRÉER'}</span><br>
+      <span style="font-size:.65rem;color:rgba(200,150,12,.5)">Rang ${esc(r.rank)} · ${r.type==='clan'?'Clan':'Ennemi'} · Par ${esc(r.by)} · ${esc(r.date)}</span><br>
+      <span style="font-size:.7rem;color:rgba(200,150,12,.7)">${esc((r.reason||'').substring(0,100))}${(r.reason||'').length>100?'…':''}</span>
+      ${r.proof?`<br><a href="${esc(r.proof)}" target="_blank" style="font-size:.65rem;color:rgba(200,150,12,.6)">🔗 Preuve</a>`:''}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <button class="btn btn-s" onclick="goCreateFromApproved(${r.id},'${r.type}')">📋 ALLER À LA FICHE</button>
+      <button class="btn btn-d" onclick="deleteApproved(${r.id})">✕ RETIRER</button>
+    </div>
   </div>`).join('');
 }
-function syncColorTxt(val){
-  const c=document.getElementById('rkf-color');
-  if(/^#[0-9a-fA-F]{6}$/.test(val))c.value=val;
+function deleteApproved(id){
+  if(!confirm('Retirer définitivement cette demande approuvée de la liste ?'))return;
+  data.requestsApproved=data.requestsApproved.filter(r=>r.id!==id);
+  saveData();renderAdmApprovedList();renderApprovedReqSelectors();toast('Retirée');
 }
-function saveRank(){
-  const n=parseInt(document.getElementById('rkf-n').value);
-  const lbl=document.getElementById('rkf-lbl').value.trim();
-  if(isNaN(n)||!lbl){toast('Numéro et nom requis');return}
-  let color=document.getElementById('rkf-color-txt').value.trim();
-  if(!/^#[0-9a-fA-F]{6}$/.test(color))color=document.getElementById('rkf-color').value;
-  const arr=rkArr();
-  const oldId=document.getElementById('rkf-id').value;
-  if(oldId!==''){
-    // editing — remove old entry if number changed, else update in place
-    const oldN=+oldId;
-    const idx=arr.findIndex(r=>r.n===oldN);
-    if(idx>=0){
-      if(n!==oldN&&arr.find(r=>r.n===n)){toast('Ce numéro de rang existe déjà');return}
-      arr[idx]={n,label:lbl,color};
-    }
-  }else{
-    if(arr.find(r=>r.n===n)){toast('Ce numéro de rang existe déjà');return}
-    arr.push({n,label:lbl,color});
-  }
-  cancelRank();saveData();renderRkList();populateRankSelects();toast('Rang enregistré');
+function goCreateFromApproved(id,type){
+  switchTab(type==='clan'?'cl':'e');
+  toast('Sélectionnez cette demande dans "Importer depuis une demande" ci-dessous');
 }
-function editRank(n){
-  const r=rkArr().find(x=>x.n===n);if(!r)return;
-  document.getElementById('rkf-id').value=r.n;
-  document.getElementById('rkf-n').value=r.n;
-  document.getElementById('rkf-lbl').value=r.label;
-  document.getElementById('rkf-color').value=r.color;
-  document.getElementById('rkf-color-txt').value=r.color;
-  document.getElementById('rkf-ttl').textContent='MODIFIER LE RANG';
-}
-function delRank(n){
-  if(!confirm('Supprimer ce rang ? Les fiches utilisant ce rang afficheront un rang inconnu.'))return;
-  const key=curRkTab==='book'?'ranksBook':'ranksClans';
-  data[key]=data[key].filter(r=>r.n!==n);
-  saveData();renderRkList();populateRankSelects();toast('Rang supprimé');
-}
-function cancelRank(){
-  document.getElementById('rkf-id').value='';
-  document.getElementById('rkf-n').value='';
-  document.getElementById('rkf-lbl').value='';
-  document.getElementById('rkf-color').value='#8b0000';
-  document.getElementById('rkf-color-txt').value='';
-  document.getElementById('rkf-ttl').textContent='AJOUTER UN RANG';
+function renderApprovedReqSelectors(){
+  // utilisé par les listes déroulantes d'import dans les formulaires ennemi/clan
+  const mkOpts=(type)=>{
+    const list=(data.requestsApproved||[]).filter(r=>r.type===type);
+    if(!list.length)return'<option value="">— Aucune demande approuvée disponible —</option>';
+    return'<option value="">— Sélectionner une demande approuvée —</option>'+list.map(r=>`<option value="${r.id}">${esc(r.target)} (rang ${esc(r.rank)}, par ${esc(r.by)})</option>`).join('');
+  };
+  const efSel=document.getElementById('ef-import-sel');if(efSel)efSel.innerHTML=mkOpts('ennemi');
+  const clfSel=document.getElementById('clf-import-sel');if(clfSel)clfSel.innerHTML=mkOpts('clan');
 }
 
-// ── DEMANDES (admin) ───────────────────────────────────────
+function importFromApproved(prefix){
+  const sel=document.getElementById(prefix+'-import-sel');
+  const id=+sel.value;if(!id){toast('Sélectionnez une demande');return}
+  const req=(data.requestsApproved||[]).find(r=>r.id===id);if(!req)return;
+  if(prefix==='ef'){
+    document.getElementById('ef-nm').value=req.target;
+    document.getElementById('ef-rk').value=req.rank;
+    document.getElementById('ef-dc').value=req.reason||'';
+    document.getElementById('ef-bn').value=req.bounty||'';
+    document.getElementById('ef-vl').value=req.clan||'';
+  }else{
+    document.getElementById('clf-nm').value=req.target;
+    document.getElementById('clf-rk').value=req.rank;
+    document.getElementById('clf-dc').value=req.reason||'';
+    document.getElementById('clf-al').value=req.clan||'';
+  }
+  // Récupère les preuves (images/vidéos) dans la liste de médias
+  const list=document.getElementById(prefix+'-media-list');
+  list.innerHTML='';
+  const proofs=(req.proofs&&req.proofs.length)?req.proofs:(req.proof?[req.proof]:[]);
+  proofs.forEach((p,i)=>{
+    const url=typeof p==='string'?p:p.url;
+    if(!url)return;
+    const type=(typeof p==='object'&&p.type)?p.type:(isYT(url)||/\.(mp4|webm|mov)(\?|$)/i.test(url)?'video':'image');
+    addMediaRow(prefix,{type,url,caption:`Preuve — demande de ${req.by}`,portrait:i===0&&type==='image'});
+  });
+  req.usedAt=new Date().toLocaleDateString('fr-FR');
+  saveData();renderAdmApprovedList();
+  toast('Informations importées — vérifiez puis enregistrez');
+}
+
 function renderAdmRequests(){
   const el=document.getElementById('adm-req-list');
   if(!data.requests||!data.requests.length){el.innerHTML='<div class="empty-lbl">Aucune demande en attente</div>';return}
@@ -1296,16 +1344,13 @@ function renderAdmRequests(){
   </div>`).join('');
 }
 function approveRequest(id){
-  const req=data.requests.find(r=>r.id===id);if(!req)return;
-  const targetSrc=req.type==='clan'?data.clans:data.book;
-  if(!targetSrc.chapters.length){toast('Créez d\'abord un chapitre');return}
-  const ch=targetSrc.chapters[0];
-  const entry=req.type==='clan'
-    ?{id:data.nid++,name:req.target,rank:req.rank,status:'ACTIF',alliance:'Inconnu',leader:'Inconnu',members:'?',desc:req.reason||'',media:[]}
-    :{id:data.nid++,name:req.target,rank:req.rank,status:'ACTIF',village:'Inconnu',bounty:'?',desc:req.reason||'',media:[]};
-  ch.entries.push(entry);
+  const idx=data.requests.findIndex(r=>r.id===id);if(idx<0)return;
+  const req=data.requests[idx];
   req.status='APPROUVE';
-  saveData();renderAdmRequests();toast('Approuvé et ajouté au chapitre 1');
+  req.usedAt=null; // sera rempli quand une fiche sera créée à partir de cette demande
+  data.requestsApproved.push(req);
+  data.requests.splice(idx,1);
+  saveData();renderAdmRequests();renderApprovedReqSelectors();toast('Demande approuvée — déplacée vers "Demandes approuvées"');
 }
 function rejectRequest(id){
   if(!confirm('Rejeter cette demande ?'))return;
@@ -1338,7 +1383,7 @@ async function manualRefresh(){
     if(!res.ok){setSyncBadge('✗ Échec ('+res.status+')','err',3000);return}
     const j=await res.json();
     if(j&&j.book&&j.clans){
-      data=j;try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
+      data=j;ensureData();try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
       rebuild();setSyncBadge('✓ Actualisé','ok',2500);toast('Données rechargées');
     }else setSyncBadge('✗ Format invalide','err',3000);
   }catch(e){setSyncBadge('✗ Hors ligne','err',3000)}
