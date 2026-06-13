@@ -9,20 +9,7 @@
       {
         "id": 2002,
         "name": "🟡 Menaces Modérées",
-        "entries": [
-          {
-            "id": 2018,
-            "name": "jojo",
-            "rank": 3,
-            "status": "DISPARU",
-            "village": "j",
-            "bounty": "200",
-            "desc": "caca",
-            "media": [],
-            "updatedAt": "13/06/2026",
-            "createdAt": "13/06/2026"
-          }
-        ]
+        "entries": []
       },
       {
         "id": 2003,
@@ -46,17 +33,6 @@
   },
   "requests": [
     {
-      "target": "Tesst",
-      "rank": 1,
-      "type": "ennemi",
-      "reason": "Test",
-      "proof": "",
-      "by": "Darkheler5",
-      "date": "12/06/2026",
-      "status": "PENDING",
-      "id": 2013
-    },
-    {
       "target": "TEST",
       "rank": 14,
       "type": "ennemi",
@@ -76,7 +52,7 @@
       "id": 2016
     }
   ],
-  "nid": 2019,
+  "nid": 2018,
   "ranksBook": [
     {
       "n": 1,
