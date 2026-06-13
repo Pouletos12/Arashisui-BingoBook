@@ -62,6 +62,18 @@
             ],
             "updatedAt": "13/06/2026",
             "createdAt": "13/06/2026"
+          },
+          {
+            "id": 2021,
+            "name": "xcfvbdfx",
+            "rank": 1,
+            "status": "ACTIF",
+            "village": "",
+            "bounty": "gsrffdghzsedrh",
+            "desc": "sdfgsfhb",
+            "media": [],
+            "updatedAt": "13/06/2026",
+            "createdAt": "13/06/2026"
           }
         ]
       }
@@ -71,7 +83,7 @@
     "chapters": []
   },
   "requests": [],
-  "nid": 2021,
+  "nid": 2022,
   "ranksBook": [
     {
       "n": 1,
