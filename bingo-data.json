@@ -26,21 +26,16 @@
         "name": "👑 Menaces Légendaires",
         "entries": [
           {
-            "id": 2011,
-            "name": "sofiane",
-            "rank": 14,
+            "id": 2017,
+            "name": "qdcs",
+            "rank": 6,
             "status": "ACTIF",
             "village": "",
-            "bounty": "1000",
-            "desc": "CACA",
-            "media": [
-              {
-                "type": "image",
-                "url": "https://cdn.discordapp.com/attachments/848620188203089951/1461810746861293608/Shisui_Thumb.png?ex=6a2d0c99&is=6a2bbb19&hm=e65b29a3b034371bae3b9c8e9a5bf34d93c43f7a6bffec3fb35ec8821c084aa4&",
-                "caption": "",
-                "portrait": false
-              }
-            ]
+            "bounty": "qsdc",
+            "desc": "asc",
+            "media": [],
+            "updatedAt": "13/06/2026",
+            "createdAt": "13/06/2026"
           }
         ]
       }
@@ -49,7 +44,49 @@
   "clans": {
     "chapters": []
   },
-  "requests": [],
+  "requests": [
+    {
+      "target": "jojo",
+      "rank": 1,
+      "type": "ennemi",
+      "reason": "test",
+      "proof": "",
+      "by": "jojolerigolo",
+      "date": "12/06/2026",
+      "status": "PENDING",
+      "id": 2012
+    },
+    {
+      "target": "Tesst",
+      "rank": 1,
+      "type": "ennemi",
+      "reason": "Test",
+      "proof": "",
+      "by": "Darkheler5",
+      "date": "12/06/2026",
+      "status": "PENDING",
+      "id": 2013
+    },
+    {
+      "target": "TEST",
+      "rank": 14,
+      "type": "ennemi",
+      "clan": "",
+      "bounty": "100",
+      "reason": "test",
+      "proof": "https://cdn.discordapp.com/attachments/848620188203089951/1461810746861293608/Shisui_Thumb.png?ex=6a2d0c99&is=6a2bbb19&hm=e65b29a3b034371bae3b9c8e9a5bf34d93c43f7a6bffec3fb35ec8821c084aa4&",
+      "proofs": [
+        "https://cdn.discordapp.com/attachments/848620188203089951/1461810746861293608/Shisui_Thumb.png?ex=6a2d0c99&is=6a2bbb19&hm=e65b29a3b034371bae3b9c8e9a5bf34d93c43f7a6bffec3fb35ec8821c084aa4&",
+        "<url>",
+        "https://cdn.discordapp.com/attachments/997313248724537344/1515220525448826900/image.png?ex=6a2e3694&is=6a2ce514&hm=4fb7ddfd8af2c6a921042fabd5cbb44e7f49915af83839ee52af44138631736d&"
+      ],
+      "by": "jojolerigolo",
+      "discord_id": "832226295202185226",
+      "date": "13/06/2026",
+      "status": "PENDING",
+      "id": 2016
+    }
+  ],
   "nid": 2018,
   "ranksBook": [
     {
@@ -165,26 +202,5 @@
       "color": "#450045"
     }
   ],
-  "requestsApproved": [
-    {
-      "target": "TEST",
-      "rank": 14,
-      "type": "ennemi",
-      "clan": "",
-      "bounty": "100",
-      "reason": "test",
-      "proof": "https://cdn.discordapp.com/attachments/848620188203089951/1461810746861293608/Shisui_Thumb.png?ex=6a2d0c99&is=6a2bbb19&hm=e65b29a3b034371bae3b9c8e9a5bf34d93c43f7a6bffec3fb35ec8821c084aa4&",
-      "proofs": [
-        "https://cdn.discordapp.com/attachments/848620188203089951/1461810746861293608/Shisui_Thumb.png?ex=6a2d0c99&is=6a2bbb19&hm=e65b29a3b034371bae3b9c8e9a5bf34d93c43f7a6bffec3fb35ec8821c084aa4&",
-        "<url>",
-        "https://cdn.discordapp.com/attachments/997313248724537344/1515220525448826900/image.png?ex=6a2e3694&is=6a2ce514&hm=4fb7ddfd8af2c6a921042fabd5cbb44e7f49915af83839ee52af44138631736d&"
-      ],
-      "by": "jojolerigolo",
-      "discord_id": "832226295202185226",
-      "date": "13/06/2026",
-      "status": "APPROUVE",
-      "id": 2016,
-      "usedAt": "13/06/2026"
-    }
-  ]
+  "requestsApproved": []
 }
