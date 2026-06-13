@@ -74,6 +74,18 @@
             "media": [],
             "updatedAt": "13/06/2026",
             "createdAt": "13/06/2026"
+          },
+          {
+            "id": 2022,
+            "name": "dggbzs",
+            "rank": 1,
+            "status": "ACTIF",
+            "village": "",
+            "bounty": "gsrfg",
+            "desc": "srfdgsrfg",
+            "media": [],
+            "updatedAt": "13/06/2026",
+            "createdAt": "13/06/2026"
           }
         ]
       }
@@ -83,7 +95,7 @@
     "chapters": []
   },
   "requests": [],
-  "nid": 2022,
+  "nid": 2023,
   "ranksBook": [
     {
       "n": 1,
