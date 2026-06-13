@@ -4,7 +4,20 @@
       {
         "id": 1,
         "name": "🟢 Menaces Mineures",
-        "entries": []
+        "entries": [
+          {
+            "id": 2019,
+            "name": "dfgs",
+            "rank": 1,
+            "status": "ACTIF",
+            "village": "",
+            "bounty": "sdfvg",
+            "desc": "qfdc",
+            "media": [],
+            "updatedAt": "13/06/2026",
+            "createdAt": "13/06/2026"
+          }
+        ]
       },
       {
         "id": 2002,
@@ -32,7 +45,7 @@
     "chapters": []
   },
   "requests": [],
-  "nid": 2019,
+  "nid": 2020,
   "ranksBook": [
     {
       "n": 1,
