@@ -657,7 +657,19 @@ function ensureData(){
   data.requests=stillPending;
 }
 
+// Calcule un nid sûr = supérieur à tous les ids existants (fiches + demandes)
+function recomputeNid(){
+  let max=1999;
+  const scan=arr=>{for(const x of arr){if(x.id>max)max=x.id}};
+  for(const c of data.book.chapters){scan(c.entries);if(c.id>max)max=c.id}
+  for(const c of data.clans.chapters){scan(c.entries);if(c.id>max)max=c.id}
+  scan(data.requests||[]);
+  scan(data.requestsApproved||[]);
+  if(data.nid<=max)data.nid=max+1;
+}
+
 function saveData(){
+  recomputeNid();
   try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}
   rebuild();
   // Auto-push si token configuré
@@ -1366,12 +1378,24 @@ async function ghAutoPush(retries){
   retries=retries===undefined?3:retries;
   setSyncBadge('⟳ Sauvegarde…','loading');
   try{
-    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
     const headers={'Authorization':`token ${ghCfg.token}`,'Content-Type':'application/json'};
     let sha;
-    try{const r=await fetch(GH_API_URL(),{headers});if(r.ok){const j=await r.json();sha=j.sha}}catch(e){}
+    try{
+      const r=await fetch(GH_API_URL(),{headers});
+      if(r.ok){
+        const j=await r.json();
+        sha=j.sha;
+        // Fusionne les demandes ajoutées entre-temps par le bot Discord
+        // pour ne pas les écraser avec notre copie locale plus ancienne.
+        try{
+          const remote=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
+          mergeRemoteRequests(remote);
+        }catch(e){}
+      }
+    }catch(e){}
+    const content=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
     const res=await fetch(GH_API_URL(),{method:'PUT',headers,body:JSON.stringify({message:'Update Bingo Book',content,branch:GH_BRANCH,...(sha&&{sha})})});
-    if(res.ok){setSyncBadge('✓ Sync GitHub','ok',3000);return}
+    if(res.ok){setSyncBadge('✓ Sync GitHub','ok',3000);try{localStorage.setItem(SK,JSON.stringify(data))}catch(e){}return}
     if(res.status===409&&retries>0){
       // Conflit de version : un autre admin a modifié le fichier entre-temps.
       // On retente avec le sha le plus récent.
@@ -1385,6 +1409,23 @@ async function ghAutoPush(retries){
     setSyncBadge('✗ Erreur réseau','err',6000);
     toast('⚠ Erreur réseau — sauvegarde GitHub échouée, réessayez');
   }
+}
+
+// Fusionne les demandes (requests/requestsApproved/nid) présentes sur GitHub
+// mais absentes localement (ex: ajoutées par le bot Discord depuis le dernier chargement),
+// pour éviter qu'un push local ne les efface.
+function mergeRemoteRequests(remote){
+  if(!remote)return;
+  const localIds=new Set([...(data.requests||[]).map(r=>r.id),...(data.requestsApproved||[]).map(r=>r.id)]);
+  let added=false;
+  for(const r of (remote.requests||[])){
+    if(!localIds.has(r.id)){data.requests.push(r);localIds.add(r.id);added=true}
+  }
+  for(const r of (remote.requestsApproved||[])){
+    if(!localIds.has(r.id)){data.requestsApproved.push(r);localIds.add(r.id);added=true}
+  }
+  if(remote.nid>data.nid)data.nid=remote.nid;
+  if(added){renderAdmRequests();renderAdmApprovedList&&renderAdmApprovedList();renderApprovedReqSelectors&&renderApprovedReqSelectors()}
 }
 
 // Actualisation manuelle (bouton 🔄)
