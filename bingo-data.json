@@ -4,32 +4,7 @@
       {
         "id": 1,
         "name": "Menaces Mineures",
-        "entries": [
-          {
-            "id": 2019,
-            "name": "dfgs",
-            "rank": 1,
-            "status": "ACTIF",
-            "village": "",
-            "bounty": "sdfvg",
-            "desc": "qfdc",
-            "media": [],
-            "updatedAt": "13/06/2026",
-            "createdAt": "13/06/2026"
-          },
-          {
-            "id": 2024,
-            "name": "test2",
-            "rank": 8,
-            "status": "ACTIF",
-            "village": "",
-            "bounty": "2000",
-            "desc": "test2",
-            "media": [],
-            "updatedAt": "28/06/2026",
-            "createdAt": "28/06/2026"
-          }
-        ]
+        "entries": []
       },
       {
         "id": 2002,
