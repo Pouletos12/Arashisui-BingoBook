@@ -34,11 +34,16 @@
         "id": 2025,
         "name": "🟡 Combat autorisé",
         "entries": []
+      },
+      {
+        "id": 2026,
+        "name": "🟠 Combat en équipe uniquement",
+        "entries": []
       }
     ]
   },
   "requests": [],
-  "nid": 2026,
+  "nid": 2027,
   "ranksBook": [
     {
       "n": 1,
