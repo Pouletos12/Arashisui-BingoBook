@@ -39,11 +39,16 @@
         "id": 2026,
         "name": "🟠 Combat en équipe uniquement",
         "entries": []
+      },
+      {
+        "id": 2027,
+        "name": "🔴 Fuite recommandée",
+        "entries": []
       }
     ]
   },
   "requests": [],
-  "nid": 2027,
+  "nid": 2028,
   "ranksBook": [
     {
       "n": 1,
