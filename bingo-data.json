@@ -29,10 +29,16 @@
     ]
   },
   "clans": {
-    "chapters": []
+    "chapters": [
+      {
+        "id": 2025,
+        "name": "🟡 Combat autorisé",
+        "entries": []
+      }
+    ]
   },
   "requests": [],
-  "nid": 2025,
+  "nid": 2026,
   "ranksBook": [
     {
       "n": 1,
