@@ -8,22 +8,22 @@
       },
       {
         "id": 2002,
-        "name": "Menaces ModÃ©rÃ©es",
+        "name": "Menaces ModÃÂ©rÃÂ©es",
         "entries": []
       },
       {
         "id": 2003,
-        "name": "ð  Menaces ÃlevÃ©es",
+        "name": "Ã°ÂÂÂ  Menaces ÃÂlevÃÂ©es",
         "entries": []
       },
       {
         "id": 2004,
-        "name": "ð´ Menaces Prioritaires",
+        "name": "Ã°ÂÂÂ´ Menaces Prioritaires",
         "entries": []
       },
       {
         "id": 2005,
-        "name": "ð Menaces LÃ©gendaires",
+        "name": "Ã°ÂÂÂ Menaces LÃÂ©gendaires",
         "entries": []
       }
     ]
@@ -41,12 +41,12 @@
     },
     {
       "n": 2,
-      "label": "Genin ExpÃ©rimentÃ©",
+      "label": "Genin ExpÃÂ©rimentÃÂ©",
       "color": "#2a5e2a"
     },
     {
       "n": 3,
-      "label": "ChÅ«nin",
+      "label": "ChÃÂ«nin",
       "color": "#5e5e00"
     },
     {
@@ -56,27 +56,27 @@
     },
     {
       "n": 5,
-      "label": "ChÅ«nin ExpÃ©rimentÃ©",
+      "label": "ChÃÂ«nin ExpÃÂ©rimentÃÂ©",
       "color": "#6e4800"
     },
     {
       "n": 6,
-      "label": "JÅnin Bas Niveau",
+      "label": "JÃÂnin Bas Niveau",
       "color": "#004e78"
     },
     {
       "n": 7,
-      "label": "JÅnin",
+      "label": "JÃÂnin",
       "color": "#003878"
     },
     {
       "n": 8,
-      "label": "JÅnin Haut Niveau",
+      "label": "JÃÂnin Haut Niveau",
       "color": "#002868"
     },
     {
       "n": 9,
-      "label": "JÅnin Ãlite",
+      "label": "JÃÂnin ÃÂlite",
       "color": "#3a0068"
     },
     {
@@ -101,7 +101,7 @@
     },
     {
       "n": 14,
-      "label": "LÃ©gende BingoBook",
+      "label": "LÃÂ©gende BingoBook",
       "color": "#8b0000"
     }
   ],
@@ -113,7 +113,7 @@
     },
     {
       "n": 2,
-      "label": "Clan Ãtabli",
+      "label": "Clan ÃÂtabli",
       "color": "#2a5e2a"
     },
     {
@@ -123,7 +123,7 @@
     },
     {
       "n": 4,
-      "label": "Clan RenÃ©gat",
+      "label": "Clan RenÃÂ©gat",
       "color": "#6e4800"
     },
     {
@@ -133,7 +133,7 @@
     },
     {
       "n": 6,
-      "label": "Clan d'Ãlite",
+      "label": "Clan d'ÃÂlite",
       "color": "#3a0068"
     },
     {
@@ -143,7 +143,7 @@
     },
     {
       "n": 8,
-      "label": "Menace LÃ©gendaire",
+      "label": "Menace LÃÂ©gendaire",
       "color": "#450045"
     }
   ],
