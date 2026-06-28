@@ -3,27 +3,27 @@
     "chapters": [
       {
         "id": 1,
-        "name": "🟢Menaces Mineures",
+        "name": "ð¢Menaces Mineures",
         "entries": []
       },
       {
         "id": 2002,
-        "name": "🟡Menaces Modérées",
+        "name": "ð¡Menaces ModÃ©rÃ©es",
         "entries": []
       },
       {
         "id": 2003,
-        "name": "🟠 Menaces Élevées",
+        "name": "ð  Menaces ÃlevÃ©es",
         "entries": []
       },
       {
         "id": 2004,
-        "name": "🔴 Menaces Prioritaires",
+        "name": "ð´ Menaces Prioritaires",
         "entries": []
       },
       {
         "id": 2005,
-        "name": "👑 Menaces Légendaires",
+        "name": "👑 Menace Légendaire",
         "entries": []
       }
     ]
@@ -41,12 +41,12 @@
     },
     {
       "n": 2,
-      "label": "Genin Expérimenté",
+      "label": "Genin ExpÃ©rimentÃ©",
       "color": "#2a5e2a"
     },
     {
       "n": 3,
-      "label": "Chūnin",
+      "label": "ChÅ«nin",
       "color": "#5e5e00"
     },
     {
@@ -56,27 +56,27 @@
     },
     {
       "n": 5,
-      "label": "Chūnin Expérimenté",
+      "label": "ChÅ«nin ExpÃ©rimentÃ©",
       "color": "#6e4800"
     },
     {
       "n": 6,
-      "label": "Jōnin Bas Niveau",
+      "label": "JÅnin Bas Niveau",
       "color": "#004e78"
     },
     {
       "n": 7,
-      "label": "Jōnin",
+      "label": "JÅnin",
       "color": "#003878"
     },
     {
       "n": 8,
-      "label": "Jōnin Haut Niveau",
+      "label": "JÅnin Haut Niveau",
       "color": "#002868"
     },
     {
       "n": 9,
-      "label": "Jōnin Élite",
+      "label": "JÅnin Ãlite",
       "color": "#3a0068"
     },
     {
@@ -101,7 +101,7 @@
     },
     {
       "n": 14,
-      "label": "Légende BingoBook",
+      "label": "LÃ©gende BingoBook",
       "color": "#8b0000"
     }
   ],
@@ -113,7 +113,7 @@
     },
     {
       "n": 2,
-      "label": "Clan Établi",
+      "label": "Clan Ãtabli",
       "color": "#2a5e2a"
     },
     {
@@ -123,7 +123,7 @@
     },
     {
       "n": 4,
-      "label": "Clan Renégat",
+      "label": "Clan RenÃ©gat",
       "color": "#6e4800"
     },
     {
@@ -133,7 +133,7 @@
     },
     {
       "n": 6,
-      "label": "Clan d'Élite",
+      "label": "Clan d'Ãlite",
       "color": "#3a0068"
     },
     {
@@ -143,7 +143,7 @@
     },
     {
       "n": 8,
-      "label": "Menace Légendaire",
+      "label": "Menace LÃ©gendaire",
       "color": "#450045"
     }
   ],
